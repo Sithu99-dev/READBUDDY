@@ -1,0 +1,13 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/OpenDyslexic3-Regular.ttf",
+      "sha1": "42ec676d3bcfaaf07fb9bad6434d4e726030451d"
+    },
+    {
+      "path": "assets/fonts/OpenDyslexicAlta-Regular.ttf",
+      "sha1": "bfbfaba9d213996305d73af184b0c5a7d45dd439"
+    }
+  ]
+}
