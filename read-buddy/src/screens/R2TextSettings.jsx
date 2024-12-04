@@ -7,12 +7,15 @@ import {
   Image,
   ScrollView,
   Switch,
+  TextInput,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
 
 export default function R2TextSettings({ navigation }) {
   const [letterSettings, setLetterSettings] = useState({});
+  const [inputText, setInputText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const colors = [
@@ -23,6 +26,7 @@ export default function R2TextSettings({ navigation }) {
     'blue',
     'indigo',
     'violet',
+    'black',
   ];
 
   const updateLetterSetting = (letter, key, value) => {
@@ -37,9 +41,8 @@ export default function R2TextSettings({ navigation }) {
 
   const renderSentence = (sentence) => {
     return sentence.split('').map((char, index) => {
-      const lowerChar = char;
       const settings =
-        letterSettings[lowerChar] || {
+        letterSettings[char] || {
           fontSize: 16,
           color: 'black',
           bold: false,
@@ -48,8 +51,8 @@ export default function R2TextSettings({ navigation }) {
         <Text
           key={index}
           style={{
-            fontFamily:'OpenDyslexic3-Regular',
-            fontSize: settings.fontSize, 
+            fontFamily: 'OpenDyslexic3-Regular',
+            fontSize: settings.fontSize,
             color: settings.color,
             fontWeight: settings.bold ? 'bold' : 'normal',
           }}
@@ -60,26 +63,60 @@ export default function R2TextSettings({ navigation }) {
     });
   };
 
+  // Filter letters based on search query
+  const filteredLetters = letters.filter(letter => 
+    letter.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Function to find a letter's settings quickly
+  const findLetterSettings = (letter) => {
+    setSearchQuery(letter);
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-
       <Text style={styles.header}>Text Settings</Text>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.subHeader}>Enter your text:</Text>
+        <TextInput
+          style={styles.textInput}
+          multiline
+          value={inputText}
+          onChangeText={setInputText}
+          placeholder="Type or paste your text here..."
+        />
+      </View>
 
       <View style={styles.sentenceContainer}>
         <View style={styles.sentence}>
-          {renderSentence('THE QUICK BROWN FOX JUMPS OVER A LAZY DOG.')}
-        </View>
-
-        <View style={styles.sentence}>
-          {renderSentence('pack my box with five dozen liquor jugs.')}
+          {renderSentence(inputText || 'THE QUICK BROWN FOX JUMPS OVER A LAZY DOG.')}
         </View>
       </View>
 
-      <Text style={styles.subHeader}>Let the child read the sentences above and personalize each letter as desired.</Text>
+      <View style={styles.searchContainer}>
+        <Text style={styles.subHeader}>Search Letters:</Text>
+        <TextInput
+          style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search for letters..."
+        />
+      </View>
 
-      {letters.map((letter) => (
+      <Text style={styles.subHeader}>Customize each letter as desired</Text>
+
+      {filteredLetters.map((letter) => (
         <View key={letter} style={styles.letterSettings}>
-          <Text style={styles.letterTitle}>{letter}</Text>
+          <TouchableOpacity 
+            onPress={() => findLetterSettings(letter)}
+            style={styles.letterTitleContainer}
+          >
+            <Text style={styles.letterTitle}>{letter}</Text>
+            {letterSettings[letter] && (
+              <View style={[styles.settingsIndicator, { backgroundColor: letterSettings[letter].color || 'black' }]} />
+            )}
+          </TouchableOpacity>
 
           <Text>Font Size (12-20):</Text>
           <Slider
@@ -136,17 +173,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginVertical: 10,
   },
+  inputContainer: {
+    marginVertical: 10,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  searchContainer: {
+    marginVertical: 10,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
   sentenceContainer: {
     marginVertical: 20,
   },
   sentence: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    borderWidth: 1, // Thickness of the border
-    borderColor: 'black', // Color of the border
-    borderRadius: 5, // Optional: rounded corners
-    padding: 5, // Optional: spacing inside the border
-    margin:5
+    borderWidth: 1,
+    borderColor: 'black',
+    borderRadius: 5,
+    padding: 5,
+    margin: 5,
   },
   subHeader: {
     fontSize: 20,
@@ -158,9 +216,20 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     paddingBottom: 10,
   },
+  letterTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
   letterTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginRight: 10,
+  },
+  settingsIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   slider: {
     width: '100%',
