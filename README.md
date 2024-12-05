@@ -3,6 +3,7 @@
 A comprehensive mobile application designed to assist children with dyslexia in improving their reading, writing, and cognitive skills through interactive exercises and personalized support.
 
 ## System Architecture
+<img width="660" alt="Screenshot 2024-12-05 at 09 43 14" src="https://github.com/user-attachments/assets/5bd84a25-aa43-4b97-9692-221e59afe238">
 
 The system is built using a modern, scalable architecture with the following key components:
 
