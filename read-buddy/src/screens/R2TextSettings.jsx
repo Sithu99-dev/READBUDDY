@@ -75,8 +75,16 @@ export default function R2TextSettings({ navigation }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Text Settings</Text>
+      <Text style={styles.header}>Read activity</Text>
 
+      
+      <TouchableOpacity 
+      style={styles.button}
+      onPress={() => navigation.navigate('ReadingActivity')}
+      >
+      <Text style={styles.buttonText}>Reading Avtivity</Text>
+    </TouchableOpacity>
+    
       <View style={styles.inputContainer}>
         <Text style={styles.subHeader}>Enter your text:</Text>
         <TextInput
@@ -239,4 +247,21 @@ const styles = StyleSheet.create({
     height: 50,
     width: '100%',
   },
+  button: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  }
 });

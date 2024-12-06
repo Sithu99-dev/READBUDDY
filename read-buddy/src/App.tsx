@@ -19,6 +19,8 @@ import SLevel1 from './screens/SLevel1';
 import SLevel2 from './screens/SLevel2';
 import SLevel3 from './screens/SLevel3';
 import SLevel4 from './screens/SLevel4';
+import ReadingActivity from './screens/ReadingActivity';
+
 
 function HomeScreen() {
   return (
@@ -49,6 +51,7 @@ function App() {
         <Stack.Screen name="Speech Level 2" component={SLevel2} />
         <Stack.Screen name="Speech Level 3" component={SLevel3} />
         <Stack.Screen name="Speech Level 4" component={SLevel4} />
+        <Stack.Screen name="ReadingActivity" component={ReadingActivity} />
       </Stack.Navigator>
     </NavigationContainer>
   );
