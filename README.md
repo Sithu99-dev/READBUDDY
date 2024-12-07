@@ -10,8 +10,8 @@
   <br>
   <div align="center">
 
-### 🔗 GitHub Repository
-<a href="(https://github.com/IT21239298/READBUDDY)">
+## 🔗 GitHub Repository
+<a href="https://github.com/IT21239298/READBUDDY">
     <img src="https://img.shields.io/badge/GitHub-View_Repository-blue?style=for-the-badge&logo=github" alt="GitHub Repository">
 </a>
 
