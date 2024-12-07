@@ -1,7 +1,7 @@
 
 <h1 align="center">
   <br>
-  📚 <span style="font-size: 48px;">READBUDDY</span>
+  📚 <span style="font-size: 64px;">READBUDDY</span>
   <br>
   <br>
   <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge" />
@@ -10,7 +10,7 @@
   <br>
   <div align="center">
 
-## 🔗 GitHub Repository
+###### 🔗 GitHub Repository
 <a href="https://github.com/IT21239298/READBUDDY">
     <img src="https://img.shields.io/badge/GitHub-View_Repository-blue?style=for-the-badge&logo=github" alt="GitHub Repository">
 </a>
@@ -18,7 +18,7 @@
 </div>
   <hr style="width: 50%; border: 2px solid #5B86E5;">
   <br>
-> An Innovative Learning System Enhancing Reading Skills in Children with Dyslexia
+
 
 ## 🎯 Overview
 
