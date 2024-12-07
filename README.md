@@ -1,6 +1,21 @@
-# Dyslexia Support System
+# “READBUDDY” Learning System Enhancing Reading Skills in Children with Dyslexia
 
-A comprehensive mobile application designed to assist children with dyslexia in improving their reading, writing, and cognitive skills through interactive exercises and personalized support.
+Dyslexia is a learning disability affecting reading, spelling, and speaking.
+• Categories of dyslexia:
+    Vision-spatial: Difficulty understanding words and symbols. 
+    Speech-sound: Mispronounces words
+    Central/surface: Difficulty reading.
+• Educational tools like mobile games with minimal text, colorful graphics, and 
+  audio enhance learning and motivation.
+• Implementing dyslexia-friendly fonts and multilingual support further aids 
+learning.
+
+## **Contributors**  
+-**IT21240942 - Wijethunga R.D.K.G - Interactive Dyslexia Writing Improvement System( Writing Coach)
+-**IT21239298 - Bandara E.M.S.S - Analyzing words based on readability for children with dyslexia(Readability Checker)
+-**IT21232336 - Thennakoon K.M.K.K - Comprehensive Cognitive Focus Development Program for Dyslexia(Focus Challenge)
+-**IT21232022 – Gunasekara G.H.M - Integrated Pronunciation Correction System(Pronunciation Assistant)
+
 
 ## System Architecture
 <img width="660" alt="Screenshot 2024-12-05 at 09 43 14" src="https://github.com/user-attachments/assets/5bd84a25-aa43-4b97-9692-221e59afe238">
@@ -13,107 +28,57 @@ The system is built using a modern, scalable architecture with the following key
 
 ### Core Services
 
-#### 1. Readability Checker Service
-- Analyzes input text for readability
-- Features:
-  - Font adjustment
-  - Spacing optimization
-  - Color contrast enhancement
-  - Custom settings persistence
-- Technologies: OCR for text recognition, Custom readability algorithms
-
-#### 2. Pronunciation Assistant Service
-- Interactive pronunciation training system
-- Features:
-  - Word identification exercises
-  - Text-to-speech integration
-  - Interactive letter/number writing practice
-  - Real-time feedback system
-- Technologies: Text-to-Speech API, Speech recognition
-
-#### 3. Writing Coach Service
+#### 1. Writing Coach
 - Comprehensive writing assistance platform
 - Features:
   - Interactive letter/number practice
   - Accuracy verification
   - Guided grid system
   - Creative writing exercises
-- Technologies: Handwriting recognition, Pattern matching
+
+#### 2. Readability Checker
+- Analyzes input text for readability
+- Features:
+  - Font adjustment
+  - Spacing optimization
+  - Color contrast enhancement
+  - Custom settings persistence
+
+#### 3. Pronunciation Assistant
+- Interactive pronunciation training system
+- Features:
+  - Word identification exercises
+  - Text-to-speech integration
+  - Real-time feedback system
 
 #### 4. Focus Challenge Service
 - Cognitive skill enhancement module
 - Features:
   - Concentration exercises
   - Quick decision-making tasks
-  - Image and word identification
   - Progress tracking
-- Technologies: Gamification engine, Performance analytics
 
-### Data Layer
-- **Database**: Stores user profiles, progress, and customized settings
-- **Cache**: Improves performance for frequently accessed content
+### **Dependencies**  
+**Backend:** 
+    - Node Js
+    - Python
+ **Frontend:** 
+    - ReactNative
+ **Database:** 
+    - Firebase
+ **Other Tools:**
+    - Git for version control  
+    - Jupyter Notebook for model prototyping
+    - OpenCV
 
-### External Services
-- Text-to-Speech API
-- OCR Service
-- Analytics Service
+  ### User Interface
+  
 
-### Monitoring and Logging
-- Logging Service: Tracks system usage and errors
-- Metrics Collection: Monitors system performance
 
-## Technical Requirements
 
-### System Requirements
-- iOS 12.0+ / Android 8.0+
-- Internet connection for cloud features
-- Minimum 2GB RAM
-- 100MB free storage
 
-### Development Stack
-- Frontend: React Native
-- Backend: Node.js
-- Database: PostgreSQL
-- Cache: Redis
-- APIs: RESTful architecture
 
-## Security Features
-- End-to-end encryption for user data
-- Secure authentication
-- Regular security audits
-- GDPR compliance
-- Data backup and recovery
 
-## Performance Optimization
-- Content caching
-- Lazy loading
-- Image optimization
-- Offline functionality
-
-## Installation and Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/dyslexia-support-system.git
-
-# Install dependencies
-npm install
-
-# Configure environment variables
-cp .env.example .env
-
-# Run development server
-npm run dev
-```
-
-## Contributing
-We welcome contributions to improve the Dyslexia Support System. Please read our contributing guidelines before submitting pull requests.
-
-## License
-This project is licensed under the MIT License - see the LICENSE.md file for details.
-
-## Support
-For support and queries, please contact:
 - Email: support@dyslexiasupport.com
 - Technical Support: tech@dyslexiasupport.com
 
