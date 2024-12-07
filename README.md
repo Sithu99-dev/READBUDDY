@@ -1,7 +1,16 @@
-# 📚 READBUDDY
 
-
-
+<h1 align="center">
+  <br>
+  📚 <span style="font-size: 48px;">READBUDDY</span>
+  <br>
+  <br>
+  <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Version-1.0-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" />
+  <br>
+  <br>
+  <hr style="width: 50%; border: 2px solid #5B86E5;">
+  <br>
 > An Innovative Learning System Enhancing Reading Skills in Children with Dyslexia
 
 ## 🎯 Overview
