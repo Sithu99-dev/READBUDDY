@@ -11,10 +11,11 @@ Dyslexia is a learning disability affecting reading, spelling, and speaking.
 learning.
 
 ## **Contributors**  
-IT21240942 - Wijethunga R.D.K.G - Interactive Dyslexia Writing Improvement System( Writing Coach)
-IT21239298 - Bandara E.M.S.S - Analyzing words based on readability for children with dyslexia(Readability Checker)
-IT21232336 - Thennakoon K.M.K.K - Comprehensive Cognitive Focus Development Program for Dyslexia(Focus Challenge)
-IT21232022 – Gunasekara G.H.M - Integrated Pronunciation Correction System(Pronunciation Assistant)
+•	IT21240942 - Wijethunga R.D.K.G - Interactive Dyslexia Writing Improvement System( Writing Coach)
+•	IT21239298 - Bandara E.M.S.S - Analyzing words based on readability for children with dyslexia(Readability Checker)
+•	IT21232336 - Thennakoon K.M.K.K - Comprehensive Cognitive Focus Development Program for Dyslexia(Focus Challenge)
+•	IT21232022 – Gunasekara G.H.M - Integrated Pronunciation Correction System(Pronunciation Assistant)
+
 
 
 ## System Architecture
@@ -59,17 +60,18 @@ The system is built using a modern, scalable architecture with the following key
   - Progress tracking
 
 ### **Dependencies**  
-**Backend:** 
-    - Node Js
-    - Python
- **Frontend:** 
-    - ReactNative
- **Database:** 
-    - Firebase
- **Other Tools:**
-    - Git for version control  
-    - Jupyter Notebook for model prototyping
-    - OpenCV
+Backend:
+•	Node Js
+•	Python
+ Frontend:
+•	ReactNative
+Database:
+•	Firebase
+Other Tools:
+•	Git for version control  
+•	Jupyter Notebook for model prototyping
+•	OpenCV
+
 
   ### User Interface
   
