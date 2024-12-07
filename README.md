@@ -8,7 +8,14 @@
   <img src="https://img.shields.io/badge/Version-1.0-blue?style=for-the-badge" />
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" />
   <br>
-  <br>
+  <div align="center">
+
+### 🔗 GitHub Repository
+<a href="(https://github.com/IT21239298/READBUDDY)">
+    <img src="https://img.shields.io/badge/GitHub-View_Repository-blue?style=for-the-badge&logo=github" alt="GitHub Repository">
+</a>
+
+</div>
   <hr style="width: 50%; border: 2px solid #5B86E5;">
   <br>
 > An Innovative Learning System Enhancing Reading Skills in Children with Dyslexia
