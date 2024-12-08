@@ -1,10 +1,23 @@
 
+<h1 align="center">
+  <br>
+  📚 <span style="font-size: 64px;">READBUDDY</span>
+  <br>
+  <br>
+  <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Version-1.0-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" />
+  <br>
+  <div align="center">
 
-  #                                                           📚 READBUDDY
+###### 🔗 GitHub Repository
+<a href="https://github.com/IT21239298/READBUDDY">
+    <img src="https://img.shields.io/badge/GitHub-View_Repository-blue?style=for-the-badge&logo=github" alt="GitHub Repository">
+</a>
 
-###### 🔗 GitHub Repository :- "https://github.com/IT21239298/READBUDDY"
-    
-
+</div>
+  <hr style="width: 50%; border: 2px solid #5B86E5;">
+  <br>
 
 
 ## 🎯 Overview
@@ -89,12 +102,37 @@ npm install
 npm start
 ```
 
+📱 User Interface
+<div align="center">
+<div align="center">
+<table>ß
+<tr align="center">
+<td width="20%">
+<img src="https://github.com/user-attachments/assets/e6e7f5ab-6c42-4cbc-9f41-b1550e0ffb95" width="200" alt="Writing Coach Interface"/>
+</td>
+<td width="20%">
+<img src="https://github.com/user-attachments/assets/22fad61c-d4c4-4a54-ad1c-d50eb2951b00" width="200" alt="Readability Checker Interface"/>
+</td>
+<td width="20%">
+<img src="https://github.com/user-attachments/assets/191fb73c-9a78-4814-91c1-9cf5626ecb3a" width="200" alt="Focus Challenge Interface"/>
+</td>
+<td width="20%">
+<img src="https://github.com/user-attachments/assets/1069a98a-3165-4649-b407-4544d7b5c1a6" width="200" alt="Pronunciation Assistant Interface"/>
+</td>
+<td width="20%">
+<img src="https://github.com/user-attachments/assets/4ba558ec-5782-4efc-b8fa-f5ece359abe4" width="200" alt="Additional Interface"/>
+</td>
+</tr>
+</table>
+</div>
+</div>
+
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ---
-
-##                                                        Made with ❤️ by the READBUDDY Team
-
+<div align="center">
+Made with ❤️ by the READBUDDY Team
+</div>
