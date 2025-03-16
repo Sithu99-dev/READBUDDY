@@ -27,7 +27,7 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.buttonWrapper}>
             <TouchableOpacity
               style={[styles.buttonLeft]}
-              onPress={() => navigation.navigate('Writing')}>
+              onPress={() => navigation.navigate('Reading')}>
               <LinearGradient
                 style={styles.button}
                 colors={['#4AACA6', '#4778B3']} // Teal to blue gradient
@@ -50,7 +50,7 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.buttonWrapper}>
             <TouchableOpacity
               style={[styles.buttonRight]}
-              onPress={() => navigation.navigate('Reading')}>
+              onPress={() => navigation.navigate('Writing')}>
               <LinearGradient
                 style={styles.button}
                 colors={['#4AACA6', '#4778B3']} // Teal to blue gradient
