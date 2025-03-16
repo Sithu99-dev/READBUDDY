@@ -17,16 +17,24 @@ const ReadingActivity = () => {
    const shuffled = words.sort(() => Math.random() - 0.5);
    setOptions(shuffled);
  };
- 
+ // calculate the score and navigate level 
  const checkAnswer = (selected) => {
     if (selected === 'dog') {
-      setScore(prev => prev + 1);
-    }
-    
-    if (currentLevel < 5) {
-      setCurrentLevel(prev => prev + 1);
+      if (currentLevel === 5) {
+        
+        const finalScore = score + 1;
+        navigation.navigate('NextActivity', { finalScore });
+      } else {
+        setScore(prev => prev + 1);
+        setCurrentLevel(prev => prev + 1);
+      }
     } else {
-      navigation.navigate('NextActivity', { finalScore: score });
+
+      if (currentLevel === 5) {
+        navigation.navigate('NextActivity', { finalScore: score });
+      } else {
+        setCurrentLevel(prev => prev + 1);
+      }
     }
   };
 
