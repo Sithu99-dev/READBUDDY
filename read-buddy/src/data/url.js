@@ -1,1 +1,1 @@
-export const myurl = "https://91cd-34-125-96-39.ngrok-free.app"
+export const myurl = "https://50a7-34-126-175-65.ngrok-free.app"
