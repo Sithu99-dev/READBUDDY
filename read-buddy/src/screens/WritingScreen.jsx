@@ -7,25 +7,25 @@ export default function WritingScreen({ navigation }) {
     source={require("../assets/bg7.jpg")}
     style={styles.container}>
       <View style={styles.header}>        
-        <Text style={styles.title}>Select the Level</Text>
+        <Text style={styles.title}>Let's Write</Text>
       </View>
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Writing Level 1')}>
-          <Text style={styles.buttonTextIcon}>1</Text>
-          <Text style={styles.buttonText}>Level</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Words')}>
+          {/* <Text style={styles.buttonTextIcon}>1</Text> */}
+          <Text style={styles.buttonText}>Words</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Writing Level 2')}>
-          <Text style={styles.buttonTextIcon}>2</Text>
-          <Text style={styles.buttonText}>Level</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Writing Numbers')}>
+          {/* <Text style={styles.buttonTextIcon}>2</Text> */}
+          <Text style={styles.buttonText}>Numbers</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Writing Level 3')}>
+        {/* <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Writing Level 3')}>
           <Text style={styles.buttonTextIcon}>3</Text>
           <Text style={styles.buttonText}>Level</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Writing Level 4')}>
           <Text style={styles.buttonTextIcon}>4</Text>
           <Text style={styles.buttonText}>Level</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </ImageBackground>
   );

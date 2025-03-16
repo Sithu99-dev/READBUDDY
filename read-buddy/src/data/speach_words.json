@@ -1,0 +1,163 @@
+[
+    {
+        "word": "Basket",
+        "letterGroups": ["B","A","S","K","E","T"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6", "#f39c12", "#1abc9c"],
+        "audio": "speech/basket.wav",
+        "level": 4,
+        "image":"speechImages/basket.jpg"
+    },
+    {
+        "word": "Box",
+        "letterGroups": ["B","O","X"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71"],
+        "audio": "speech/box.wav",
+        "level": 1,
+        "image":"speechImages/Box.jpg"
+    },
+    {
+        "word": "Brush",
+        "letterGroups": ["B","R","U","SH"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6"],
+        "audio": "speech/brush.wav",
+        "level": 3,
+        "image":"speechImages/brush.jpg"
+    },
+    {
+        "word": "Cup",
+        "letterGroups": ["C","U","P"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71"],
+        "audio": "speech/cup.wav",
+        "level": 1,
+        "image":"speechImages/cup.jpg"
+    },
+    {
+        "word": "Dog",
+        "letterGroups": ["D","O","G"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71"],
+        "audio": "speech/dog.wav",
+        "level": 1,
+        "image":"speechImages/dog.jpg"
+    },
+    {
+        "word": "Grape",
+        "letterGroups": ["G","R","A","P","E"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6", "#f39c12"],
+        "audio": "speech/Grape.wav",
+        "level": 3,
+        "image":"speechImages/grape.jpeg"
+    },
+    {
+        "word": "Hat",
+        "letterGroups": ["H","A","T"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71"],
+        "audio": "speech/hat.wav",
+        "level": 1,
+        "image":"speechImages/Hat.png"
+    },
+    {
+        "word": "Helmet",
+        "letterGroups": ["H","E","L","M","E","T"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6", "#f39c12", "#1abc9c"],
+        "audio": "speech/helmet.wav",
+        "level": 4,
+        "image":"speechImages/helmet.jpg"
+    },
+    {
+        "word": "House",
+        "letterGroups": ["H","OU","SE"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71"],
+        "audio": "speech/house.wav",
+        "level": 3,
+        "image":"speechImages/house.jpg"
+    },
+    {
+        "word": "Kite",
+        "letterGroups": ["K","I","TE"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71"],
+        "audio": "speech/kite.wav",
+        "level": 2,
+        "image":"speechImages/kite.jpg"
+    },
+    {
+        "word": "Lamp",
+        "letterGroups": ["L","A","M","P"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6"],
+        "audio": "speech/lamp.wav",
+        "level": 2,
+        "image":"speechImages/lamp.jpg"
+    },
+    {
+        "word": "Laptop",
+        "letterGroups": ["L","A","P","T","O","P"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6", "#f39c12", "#1abc9c"],
+        "audio": "speech/laptop.wav",
+        "level": 4,
+        "image":"speechImages/laptop.jpg"
+    },
+    {
+        "word": "Milk",
+        "letterGroups": ["M","I","L","K"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6"],
+        "audio": "speech/milk.wav",
+        "level": 2,
+        "image":"speechImages/milk.jpg"
+    },
+    {
+        "word": "Pen",
+        "letterGroups": ["P","E","N"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71"],
+        "audio": "speech/pen.wav",
+        "level": 1,
+        "image":"speechImages/pen.jpg"
+    },
+    {
+        "word": "Pencil",
+        "letterGroups": ["P","E","N", "CI", "L"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6", "#f39c12"],
+        "audio": "speech/pencil.wav",
+        "level": 4,
+        "image":"speechImages/pencil.jpg"
+    },
+    {
+        "word": "Pillow",
+        "letterGroups": ["P","I","LL","OW"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6"],
+        "audio": "speech/pillow.wav",
+        "level": 3,
+        "image":"speechImages/pillow.jpg"
+    },
+    {
+        "word": "Plate",
+        "letterGroups": ["P","L","A","TE"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6"],
+        "audio": "speech/plate.wav",
+        "level": 2,
+        "image":"speechImages/plate.jpg"
+    },
+    {
+        "word": "Rocket",
+        "letterGroups": ["R","O","CK","E","T"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6", "#f39c12"],
+        "audio": "speech/rocket.wav",
+        "level": 4,
+        "image":"speechImages/rocket.jpg"
+    },
+    {
+        "word": "Ship",
+        "letterGroups": ["SH","I","P"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71"],
+        "audio": "speech/ship.wav",
+        "level": 2,
+        "image":"speechImages/ship.JPG"
+    },
+    {
+        "word": "Table",
+        "letterGroups": ["T","A","B","LE"],
+        "letterColors":["#e74c3c", "#3498db", "#2ecc71", "#9b59b6"],
+        "audio": "speech/table.wav",
+        "level": 3,
+        "image":"speechImages/table.jpg"
+    }
+
+]
