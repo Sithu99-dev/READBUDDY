@@ -6,8 +6,8 @@ import LinearGradient from 'react-native-linear-gradient';
 
 export default function DashboardScreen({ navigation }) {
   return (
-    <ImageBackground 
-      source={require("../assets/dashbordmain.png")}
+    <ImageBackground
+      source={require('../assets/dashbordmain.png')}
       style={styles.container}>
       <AppContext.Consumer>
         {({ setLoggedInUser }) => (
@@ -21,13 +21,12 @@ export default function DashboardScreen({ navigation }) {
 
       <View style={styles.mainContainer}>
         <Text style={styles.mainTitle}>Let's Play{'\n'}     & Learn..!</Text>
-        
+
         <View style={styles.buttonsContainer}>
           {/* Writing Button - Left aligned with Left Line */}
           <View style={styles.buttonWrapper}>
-            <View style={styles.buttonLineLeft} />
-            <TouchableOpacity 
-              style={[styles.buttonLeft]} 
+            <TouchableOpacity
+              style={[styles.buttonLeft]}
               onPress={() => navigation.navigate('Writing')}>
               <LinearGradient
                 style={styles.button}
@@ -36,11 +35,12 @@ export default function DashboardScreen({ navigation }) {
                 end={{x: 1, y: 1}}
               >
                 <View style={styles.buttonContent}>
-                  <Image 
-                    source={require('../assets/writing.png')} 
-                    style={styles.buttonIcon} 
+                  <Image
+                      source={require('../assets/reading.png')}
+                    style={styles.buttonIcon}
                   />
-                  <Text style={styles.buttonText}>Writing</Text>
+
+                  <Text style={styles.buttonText}>Readability Checker</Text>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
@@ -48,8 +48,8 @@ export default function DashboardScreen({ navigation }) {
 
           {/* Reading Button - Right aligned with Right Line */}
           <View style={styles.buttonWrapper}>
-            <TouchableOpacity 
-              style={[styles.buttonRight]} 
+            <TouchableOpacity
+              style={[styles.buttonRight]}
               onPress={() => navigation.navigate('Reading')}>
               <LinearGradient
                 style={styles.button}
@@ -58,22 +58,22 @@ export default function DashboardScreen({ navigation }) {
                 end={{x: 1, y: 1}}
               >
                 <View style={styles.buttonContent}>
-                  <Image 
-                    source={require('../assets/reading.png')} 
-                    style={styles.buttonIcon} 
+
+                 <Text style={styles.buttonText}>Writing Coach</Text>
+                 <Image
+                    source={require('../assets/writing.png')}
+                    style={styles.buttonIcon}
                   />
-                  <Text style={styles.buttonText}>Reading</Text>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
-            <View style={styles.buttonLineRight} />
+
           </View>
 
           {/* Speaking Button - Left aligned with Left Line */}
           <View style={styles.buttonWrapper}>
-            <View style={styles.buttonLineLeft} />
-            <TouchableOpacity 
-              style={[styles.buttonLeft]} 
+            <TouchableOpacity
+              style={[styles.buttonLeft]}
               onPress={() => navigation.navigate('Speech')}>
               <LinearGradient
                 style={styles.button}
@@ -82,11 +82,11 @@ export default function DashboardScreen({ navigation }) {
                 end={{x: 1, y: 1}}
               >
                 <View style={styles.buttonContent}>
-                  <Image 
-                    source={require('../assets/speaking.png')} 
-                    style={styles.buttonIcon} 
+                  <Image
+                    source={require('../assets/speaking.png')}
+                    style={styles.buttonIcon}
                   />
-                  <Text style={styles.buttonText}>Speaking</Text>
+                  <Text style={styles.buttonText}>Pronunciation Assit</Text>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
@@ -94,8 +94,8 @@ export default function DashboardScreen({ navigation }) {
 
           {/* Focus Button - Right aligned with Right Line */}
           <View style={styles.buttonWrapper}>
-            <TouchableOpacity 
-              style={[styles.buttonRight]} 
+            <TouchableOpacity
+              style={[styles.buttonRight]}
               onPress={() => navigation.navigate('Focus')}>
               <LinearGradient
                 style={styles.button}
@@ -104,15 +104,14 @@ export default function DashboardScreen({ navigation }) {
                 end={{x: 1, y: 1}}
               >
                 <View style={styles.buttonContent}>
-                  <Image 
-                    source={require('../assets/focus.png')} 
-                    style={styles.buttonIcon} 
+                 <Text style={styles.buttonText}>Focus Challenge</Text>
+                  <Image
+                    source={require('../assets/focus.png')}
+                    style={styles.buttonIcon}
                   />
-                  <Text style={styles.buttonText}>Focus</Text>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
-            <View style={styles.buttonLineRight} />
           </View>
         </View>
       </View>
@@ -121,15 +120,15 @@ export default function DashboardScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     backgroundColor: '#d7e9f1',
   },
   logout: {
-    flexDirection: 'row', 
-    justifyContent: 'flex-end', 
-    alignContent: 'flex-end', 
-    width: '100%', 
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignContent: 'flex-end',
+    width: '100%',
     paddingHorizontal: 20,
   },
   mainContainer: {
@@ -143,7 +142,7 @@ const styles = StyleSheet.create({
     color: 'black',
     marginLeft:40,
     marginBottom: 60,
-    fontStyle:'italic'
+    fontStyle:'italic',
   },
   buttonsContainer: {
     justifyContent: 'center',
@@ -158,19 +157,21 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 80,
-    width: '90%',
+    width: '130%',
     justifyContent: 'center',
     borderRadius: 15,
     overflow: 'hidden',
   },
   buttonLeft: {
     width: '70%',
-    marginLeft: 135,
+    marginLeft:20,
+    marginBottom:10,
   },
   buttonRight: {
     width: '70%',
-    alignSelf: 'flex-end',
-    marginRight: 30,
+    justifyContent: 'center',
+    marginLeft:20,
+    marginBottom:10,
   },
   buttonContent: {
     flexDirection: 'row',
@@ -184,27 +185,9 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 32,
+    fontSize: 26,
     flex: 1,
-    textAlign: 'right',
+    textAlign: 'center',
     paddingRight: 20,
   },
-  buttonLineLeft: {
-    position: 'absolute',
-    left: 0,
-    width: 135,
-    height: 8,
-    backgroundColor: 'black',
-    zIndex: 1,
-    borderRadius: 15,
-  },
-  buttonLineRight: {
-    position: 'absolute',
-    right: 3,
-    width: 135,
-    height: 8,
-    backgroundColor: 'black',
-    zIndex: 1,
-    borderRadius: 15,
-  }
 });
