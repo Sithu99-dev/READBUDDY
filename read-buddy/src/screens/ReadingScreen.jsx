@@ -1,88 +1,57 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, Modal, Image, TouchableOpacity, StyleSheet, PermissionsAndroid, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
 
-export default function ReadingScreen({ navigation }) {
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [photo, setPhoto] = useState(null);
-  const cameraRef = useRef(null);
-  const [cameraAuthorized, setCameraAuthorized] = useState(false);
-
-  useEffect(() => {
-    // const requestCameraPermission = async () => {
-    //   if (Platform.OS === 'android') {
-    //     const granted = await PermissionsAndroid.request(
-    //       PermissionsAndroid.PERMISSIONS.CAMERA,
-    //       {
-    //         title: 'Camera Permission',
-    //         message: 'This app needs access to your camera to take pictures.',
-    //         buttonNeutral: 'Ask Me Later',
-    //         buttonNegative: 'Cancel',
-    //         buttonPositive: 'OK',
-    //       },
-    //     );
-    //     setCameraAuthorized(granted === PermissionsAndroid.RESULTS.GRANTED);
-    //   } else {
-    //     setCameraAuthorized(true); // iOS permissions are handled automatically
-    //   }
-    // };
-
-    // requestCameraPermission();
-  }, []);
-
-  const openCamera = async () => {
-    if (cameraRef.current) {
-    //   const options = { quality: 0.5, base64: true };
-    //   const data = await cameraRef.current.takePictureAsync(options);
-    //   setPhoto({ uri: data.uri });
-    //   setModalVisible(true);
-    }
-  };
+export default function ReadingScreen({ navigation }) { 
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.instruction}>Take a clear picture of your document.</Text>
-
-      <View style={styles.cameraContainer}>
-        {cameraAuthorized ? (
-        <Text>Camera ready</Text>
-        ) : (
-        <Text>Camera not authorized</Text>
-        )}
-      </View>
-
-      <TouchableOpacity style={styles.cameraButton} onPress={openCamera}>
-        <Text style={styles.cameraIcon}>📷</Text>
-      </TouchableOpacity>
-
-      <Modal visible={isModalVisible} transparent={false} animationType="slide">
-        <View style={styles.modalContainer}>
-          {photo && <Image source={photo} style={styles.photo} />}
-
-          <View style={styles.fixToText}>
-            <TouchableOpacity onPress={() => { setModalVisible(false); navigation.navigate('Scanned Text'); }} >
-              <Text style={styles.positiveBtn}>Scan the Text</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => setModalVisible(false)} >
-              <Text style={styles.negativeBtn}>Retake</Text>
-            </TouchableOpacity>
+    <ImageBackground 
+        source={require("../assets/bg8.jpg")}
+        style={styles.container}>
+          <View style={styles.header}>        
+            <Text style={styles.title}>Let's Read</Text>
           </View>
-        </View>
-      </Modal>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', position: 'relative' },
-  instruction: { fontSize: 23, fontWeight: '600', margin: 20, padding: 18, borderColor: '#27ac1f', borderWidth: 1, color: '#27ac1f' },
-  cameraContainer: { width: '100%', height: 400, marginVertical: 20 },
-  camera: { flex: 1, justifyContent: 'flex-end', alignItems: 'center' },
-  cameraButton: { backgroundColor: '#85fe78', padding: 20, borderRadius: 80 },
-  cameraIcon: { fontSize: 40, color: 'white', padding: 20 },
-  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  photo: { width: 200, height: 300, marginBottom: 20 },
-  fixToText: { flexDirection: 'row', justifyContent: 'space-between', gap: 50 },
-  positiveBtn: { fontSize: 20, fontWeight: '600', color: '#12181e', padding: 10, margin: 5, backgroundColor: '#85fe78', borderRadius: 10 },
-  negativeBtn: { fontSize: 20, fontWeight: '600', color: '#12181e', padding: 10, margin: 5, backgroundColor: '#bcbcbc', borderRadius: 10 }
-});
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Text Reading')}>
+              {/* <Text style={styles.buttonTextIcon}>1</Text> */}
+              <Text style={styles.buttonText}>Text Reading</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Reading Challenge')}>
+              {/* <Text style={styles.buttonTextIcon}>2</Text> */}
+              <Text style={styles.buttonText}>Reading Challange</Text>
+            </TouchableOpacity>
+            
+          </View>
+        </ImageBackground>
+      );
+    }
+    
+    const styles = StyleSheet.create({
+      container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+      header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+      logo: { width: 50, height: 50, marginRight: 10 },
+      title: { fontSize: 48, fontWeight: 'bold', color:'#12181e' },
+      buttonsContainer: { flexDirection: 'column', flexWrap: 'wrap', justifyContent: 'center' },
+      button: {
+        width: 200,
+        height: 100,
+        margin: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row-reverse',
+        gap:12,
+        backgroundColor: '#85fe78',
+        borderRadius: 10,
+      },
+      buttonText: { color: '#12181e', textAlign: 'center', fontSize: 32 },
+      buttonTextIcon: { 
+        color: '#12181e', 
+        textAlign: 'center', 
+        fontSize: 28,
+        fontWeight: 'bold',
+        padding:5,
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        width:40,
+        height:40
+       },
+    });

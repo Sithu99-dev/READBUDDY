@@ -1,12 +1,26 @@
 // screens/DashboardScreen.js
 import React from 'react';
 import { View, Text, Image, Button, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { AppContext } from '../App';
 
 export default function DashboardScreen({ navigation }) {
   return (
     <ImageBackground 
     source={require("../assets/bg4.jpg")}
     style={styles.container}>
+      <AppContext.Consumer>
+      {({ setLoggedInUser }) => (
+        <View style={styles.logout}>
+          {/* <Text>Welcome to Dashboard</Text> */}
+          <TouchableOpacity onPress={() => setLoggedInUser(null)}>
+            <Text style={{ color: '#12181e',fontWeight: 'bold', marginTop: 20, backgroundColor: '#27ac1f', padding:8, borderRadius: 8, }}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </AppContext.Consumer>
+
+    <View style={styles.container}>
+
       <View style={styles.header}>
         <Image source={require('../assets/logo1.png')} style={styles.logo} />
         <Text style={styles.title}>Read Budy</Text>
@@ -28,13 +42,17 @@ export default function DashboardScreen({ navigation }) {
           <Text style={styles.buttonTextIcon}>🎯</Text>
           <Text style={styles.buttonText}>Focus</Text>
         </TouchableOpacity>
+      
       </View>
+    </View>
+
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  logout:{flexDirection: 'row', justifyContent:'flex-end', alignContent:'flex-end', width:'100%', paddingHorizontal:20,},
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   logo: { width: 50, height: 50, marginRight: 10 },
   title: { fontSize: 48, fontWeight: 'bold', color:'#27ac1f' },
