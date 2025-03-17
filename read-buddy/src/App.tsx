@@ -29,6 +29,8 @@ import GameOverScreen from './components/GameOverScreen';
 import Game from './components/Game';
 import WordWrite from './screens/WordsWrite';
 import TextInputScreen from './screens/TextInputScreen'; // Ensure correct path
+import SplashScreen from './screens/welcomeScreen/SplashScreen';
+import OnboardingScreen from './screens/welcomeScreen/OnboardingScreen';
 
 // Define navigation param lists
 export type RootStackParamList = {
@@ -39,6 +41,9 @@ export type RootStackParamList = {
   Writing: undefined;
   Speech: undefined;
   Focus: undefined;
+  Splash: undefined;
+  Onboarding: undefined;
+
   'Text Reading': undefined;
   'Scanned Text': { scannedText: string; letterSettings?: object };
   'Text Settings': { scannedText?: string; inputText?: string; letterSettings: object };
@@ -296,6 +301,8 @@ function App() {
             </React.Fragment>
           ) : (
             <React.Fragment>
+                <Stack.Screen name="Splash" component={SplashScreen} />
+                <Stack.Screen name="Onboarding" component={OnboardingScreen} />
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
             </React.Fragment>
