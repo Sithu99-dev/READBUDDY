@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, Modal } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import questionsData from '../data/Reading_Activity.json';
 import storage from '@react-native-firebase/storage';
+import ResultScreen from '../screens/rActivityScreen/ResultScreen'; // Import the ResultScreen component
 
 export default function ReadingChallenge({ navigation }) {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentQuestions, setCurrentQuestions] = useState([]);
   const [score, setScore] = useState(0);
-  const [gameState, setGameState] = useState('splash'); // Added 'splash' state
+  const [gameState, setGameState] = useState('splash');
   const [imageUrl, setImageUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  // New state for correct answer popup
+  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
+  const [correctWord, setCorrectWord] = useState('');
+  const [correctWordProps, setCorrectWordProps] = useState({
+    fontSize: 24,
+    space: 2,
+    hLetters: [],
+    color: 'red'
+  });
   
   const levelStructure = {
     1: ['1-1', '1-2', '1-3', '1-4', '1-5'],
@@ -104,9 +115,32 @@ export default function ReadingChallenge({ navigation }) {
 
   const handleAnswer = (isCorrect) => {
     console.log('Answer chosen, isCorrect:', isCorrect);
+    
     if (isCorrect) {
+      // If correct, add to score and proceed to next question
       setScore(score + 1);
+      goToNextQuestion();
+    } else {
+      // If incorrect, show the correct answer popup
+      const currentQuestion = currentQuestions[currentQuestionIndex];
+      setCorrectWord(currentQuestion.correct_word);
+      setCorrectWordProps({
+        fontSize: currentQuestion.font_size || 24,
+        space: currentQuestion.space || 2,
+        hLetters: currentQuestion.h_letter || [],
+        color: currentQuestion.color || 'red'
+      });
+      setShowCorrectAnswer(true);
+      
+      // Automatically close popup after 2 seconds and go to next question
+      setTimeout(() => {
+        setShowCorrectAnswer(false);
+        goToNextQuestion();
+      }, 2000);
     }
+  };
+  
+  const goToNextQuestion = () => {
     if (currentQuestionIndex + 1 < currentQuestions.length) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
@@ -147,9 +181,14 @@ export default function ReadingChallenge({ navigation }) {
   if (gameState === 'splash') {
     return (
       <View style={styles.splashContainer}>
-        <View style={styles.levelCircle}>
+        <LinearGradient
+          style={styles.levelCircle}
+          colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+        >
           <Text style={styles.levelNumber}>{currentLevel}</Text>
-        </View>
+        </LinearGradient>
         <Text style={styles.splashText}>Level {currentLevel}</Text>
         <Text style={styles.splashSubText}>Get ready!</Text>
       </View>
@@ -158,29 +197,15 @@ export default function ReadingChallenge({ navigation }) {
 
   if (gameState === 'results') {
     const totalQuestions = currentQuestions.length;
-    // Using 70% passing threshold as requested
-    const passed = score >= Math.floor(totalQuestions * 0.7);
+    // Use the ResultScreen component
     return (
-      <View style={styles.container}>
-        <Text style={styles.header}>Level {currentLevel} Results</Text>
-        <Text style={styles.scoreText}>
-          Score: {score} / {totalQuestions}
-        </Text>
-        <Text style={styles.resultText}>
-          {passed ? 'Well done! You passed!' : `You need at least ${Math.floor(totalQuestions * 0.7)} correct answers to advance.`}
-        </Text>
-        {passed ? (
-          <TouchableOpacity style={styles.positiveButton} onPress={handleNextLevel}>
-            <Text style={styles.positiveButtonText}>
-              {currentLevel < 5 ? 'Next Level' : 'Finish'}
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.positiveButton} onPress={handleRetry}>
-            <Text style={styles.positiveButtonText}>Retry Level</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <ResultScreen 
+        score={score}
+        totalQuestions={totalQuestions}
+        currentLevel={currentLevel}
+        onNextLevel={handleNextLevel}
+        onRetry={handleRetry}
+      />
     );
   }
 
@@ -212,10 +237,15 @@ export default function ReadingChallenge({ navigation }) {
 
   return (
     <View style={styles.pageContainer}>
-      {/* Level indicator circle */}
-      <View style={styles.levelCircle}>
+      {/* Level indicator circle with gradient */}
+      <LinearGradient
+        style={styles.levelCircle}
+        colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+        start={{x: 0, y: 0}}
+        end={{x: 1, y: 0}}
+      >
         <Text style={styles.levelNumber}>{currentQuestionIndex + 1}</Text>
-      </View>
+      </LinearGradient>
 
       <View style={styles.questionCard}>
         <Text style={styles.questionText}>Choose the correct answer?</Text>
@@ -234,22 +264,60 @@ export default function ReadingChallenge({ navigation }) {
         
         {/* Answer Options */}
         <View style={styles.answerContainer}>
-          {shuffledAnswers.map((answer, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.answerButton}
-              onPress={() => handleAnswer(answer.isCorrect)}
-            >
+          {shuffledAnswers.map((answer, index) => {
+            // Calculate dynamic height based on font size
+            const buttonHeight = font_size ? Math.max(font_size * 2.5, 60) : 60;
+            
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.answerButton,
+                  { height: buttonHeight } // Apply dynamic height
+                ]}
+                onPress={() => handleAnswer(answer.isCorrect)}
+              >
+                <View style={styles.answerTextContainer}>
+                  <Text style={[
+                    styles.answerText,
+                    { fontFamily: getFontFamily() }
+                  ]}>
+                    {renderWord(answer.text, font_size || 24, space || 2, h_letter || [], color || 'red')}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* Correct Answer Popup Modal */}
+      <Modal
+        transparent={true}
+        visible={showCorrectAnswer}
+        animationType="fade"
+        onRequestClose={() => setShowCorrectAnswer(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Correct Answer:</Text>
+            <View style={styles.modalAnswer}>
               <Text style={[
                 styles.answerText,
                 { fontFamily: getFontFamily() }
               ]}>
-                {renderWord(answer.text, font_size || 24, space || 2, h_letter || [], color || 'red')}
+                {renderWord(
+                  correctWord,
+                  correctWordProps.fontSize,
+                  correctWordProps.space,
+                  correctWordProps.hLetters,
+                  correctWordProps.color
+                )}
               </Text>
-            </TouchableOpacity>
-          ))}
+            </View>
+          </View>
         </View>
-      </View>
+      </Modal>
     </View>
   );
 }
@@ -276,10 +344,10 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#8d999a', // Gray circle
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+    // Removed backgroundColor since it's now handled by the gradient
   },
   levelNumber: {
     fontSize: 36,
@@ -326,48 +394,24 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   answerButton: {
-    backgroundColor: '#8d999a', // Gray button background
-    padding: 15,
+    backgroundColor: '#ffffff',
     borderRadius: 30,
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
     width: '100%',
+  },
+  answerTextContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 5,
   },
   answerText: {
     textAlign: 'center',
     fontSize: 24,
     flexDirection: 'row',
     display: 'flex',
-  },
-  
-  // Results screen
-  header: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: 'white',
-  },
-  scoreText: {
-    fontSize: 24,
-    marginVertical: 15,
-    color: 'white',
-  },
-  resultText: {
-    fontSize: 22,
-    marginBottom: 30,
-    color: 'white',
-  },
-  positiveButton: {
-    backgroundColor: '#85fe78',
-    padding: 15,
-    borderRadius: 15,
-    minWidth: 150,
-    alignItems: 'center',
-  },
-  positiveButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#12181e',
   },
   
   // Splash screen
@@ -387,5 +431,34 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: 'white',
     marginTop: 10,
+  },
+  
+  // Modal popup styles
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  modalAnswer: {
+    padding: 15,
+    borderRadius: 15,
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 60,
   }
 });
