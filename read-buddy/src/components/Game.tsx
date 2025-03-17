@@ -1,14 +1,14 @@
-
 import React, { useEffect, useState, useContext } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
   View,
   Text,
-  Dimensions,
   ScrollView,
   TouchableOpacity,
   Alert,
+  ImageBackground,
+  Dimensions,
 } from 'react-native';
 import { PanGestureHandler, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Colors } from '../styles/colors';
@@ -370,34 +370,69 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
 
   if (!isLevelSelected) {
     return (
-      <ScrollView contentContainerStyle={styles.levelSelectionContainer}>
-        <View style={styles.leaderboardContainer}>
-          <Text style={styles.leaderboardHeader}>Leaderboard</Text>
-          {topPlayers.map((player, index) => (
-            <View key={index} style={styles.leaderboardItem}>
-              <Text style={styles.leaderboardText}>
-                {index + 1}. {player.user_name}: <Text style={styles.scoreText}>{player.score}</Text>
-              </Text>
+      <ImageBackground 
+      source={require('../assets/speakingbg.png')}
+        style={styles.levelSelectionBackground}
+        imageStyle={{opacity: 0.3}}>
+        <ScrollView contentContainerStyle={styles.levelSelectionContainer}>
+          {/* Scoreboard Section */}
+          <View style={styles.scoreboardContainer}>
+            <Text style={styles.scoreboardTitle}>Scoreboard</Text>
+            <View style={styles.scoreboardItems}>
+              {topPlayers.map((player, index) => (
+                <View key={index} style={styles.scoreItem}>
+                  <Text style={styles.scoreItemText}>
+                    {index + 1}. {player.user_name}: {player.score}
+                  </Text>
+                </View>
+              ))}
+              {topPlayers.length === 0 && (
+                <>
+                  <View style={styles.scoreItem}></View>
+                  <View style={styles.scoreItem}></View>
+                  <View style={styles.scoreItem}></View>
+                </>
+              )}
             </View>
-          ))}
-          <View style={styles.currentUserItem}>
-            <Text style={styles.leaderboardText}>
-              You: <Text style={styles.currentUserScore}>{currentUserScore}</Text>
-            </Text>
           </View>
-        </View>
-
-        <Text style={styles.levelHeader}>Select Levels</Text>
-        {[1, 2, 3, 4, 5].map((lvl) => (
-          <TouchableOpacity
-            key={lvl}
-            style={styles.levelButton}
-            onPress={() => handleLevelSelect(lvl)}
-          >
-            <Text style={styles.levelText}>Level {lvl}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+          
+          {/* Level Selection Title */}
+          <Text style={styles.levelSelectionTitle}>Level Selection</Text>
+          
+          {/* Level Buttons */}
+          <View style={styles.levelsContainer}>
+            <TouchableOpacity 
+              style={[styles.levelButton, styles.level1]}
+              onPress={() => handleLevelSelect(1)}>
+              <Text style={styles.levelButtonText}>Level 01</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.levelButton, styles.level2]}
+              onPress={() => handleLevelSelect(2)}>
+              <Text style={styles.levelButtonText}>Level 02</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.levelButton, styles.level3]}
+              onPress={() => handleLevelSelect(3)}>
+              <Text style={styles.levelButtonText}>Level 03</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.levelButton, styles.level4]}
+              onPress={() => handleLevelSelect(4)}>
+              <Text style={styles.levelButtonText}>Level 04</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.levelButton, styles.level5]}
+              onPress={() => handleLevelSelect(5)}>
+              <Text style={styles.levelButtonText}>Level 05</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </ImageBackground>
     );
   }
 
@@ -413,7 +448,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
           >
             <View style={styles.headerContent}>
               <Score score={score} />
-              <Text style={styles.levelText}>Level: {level}</Text>
+              <Text style={styles.gameLevelText}>Level: {level}</Text>
             </View>
           </Header>
           <View style={styles.boundaries}>
@@ -429,72 +464,113 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
   );
 }
 
+const windowHeight = Dimensions.get('window').height;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.primary,
   },
+  levelSelectionBackground: {
+    flex: 1,
+    backgroundColor: '#5ECCD9', // Turquoise background color
+  },
   levelSelectionContainer: {
     flexGrow: 1,
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: Colors.primary,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
   },
-  leaderboardContainer: {
-    width: '100%',
+  scoreboardContainer: {
+    width: '90%',
+    backgroundColor: 'white',
+    borderRadius: 25,
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    alignItems: 'center',
     marginBottom: 20,
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
   },
-  leaderboardHeader: {
-    fontSize: 24,
+  scoreboardTitle: {
+    fontSize: 22,
     fontWeight: 'bold',
+    color: 'black',
     marginBottom: 10,
-    textAlign: 'center',
-    color: '#333',
   },
-  leaderboardItem: {
-    marginVertical: 5,
+  scoreboardItems: {
+    width: '100%',
   },
-  currentUserItem: {
-    marginVertical: 5,
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
-    paddingTop: 5,
-  },
-  leaderboardText: {
-    fontSize: 18,
-    color: '#333',
-  },
-  scoreText: {
-    fontWeight: 'bold',
-    color: '#27ac1f',
-  },
-  currentUserScore: {
-    fontWeight: 'bold',
-    color: '#ff4500',
-  },
-  levelHeader: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginVertical: 20,
-    color: '#fff',
-  },
-  levelButton: {
-    backgroundColor: '#85fe78',
-    padding: 15,
+  scoreItem: {
+    backgroundColor: '#E8E8E8', // Light gray background
     borderRadius: 10,
-    marginVertical: 10,
-    width: '80%',
+    height: 40,
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    marginVertical: 5,
+  },
+  scoreItemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  levelSelectionTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: 'black',
+    marginVertical: 15,
+    alignSelf: 'flex-start',
+    marginLeft: '5%',
+  },
+  levelsContainer: {
+    width: '90%',
     alignItems: 'center',
   },
-  levelText: {
+  levelButton: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 25,
+    marginVertical: 8,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  level1: {
+    backgroundColor: 'rgba(153, 222, 186, 0.9)', 
+    height: 60,
+    width: '70%',
+    marginRight:120,
+  },
+  level2: {
+    backgroundColor: 'rgba(244, 214, 176, 0.9)', 
+    height: 65,
+    width: '80%',
+    marginRight:90,
+  },
+  level3: {
+    backgroundColor: 'rgba(244, 182, 172, 0.9)',
+    height: 70,
+    width: '90%',
+    marginRight:70,
+  },
+  level4: {
+    backgroundColor: 'rgba(239, 148, 148, 0.9)', 
+    height: 75,
+    width: '100%',
+    marginRight:40,
+  },
+  level5: {
+    backgroundColor: 'rgba(236, 135, 135, 0.9)',
+    height: 80,
+    width: '110%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight:10,
+
+  },
+  levelButtonText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  gameLevelText: {
     fontSize: 20,
     color: '#12181e',
     fontWeight: '600',
