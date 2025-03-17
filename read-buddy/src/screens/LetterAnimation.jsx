@@ -217,6 +217,7 @@ export default function LetterAnimation({ navigation, route }) {
       } else {
         setStatus('Listen to the correct pronunciation');
         playCorrectAudio();
+        startAnimation();
       }
     } catch (error) {
       console.error('Stop recording/upload error:', error);
@@ -350,7 +351,7 @@ export default function LetterAnimation({ navigation, route }) {
             <Text style={styles.buttonText}>Speak</Text>
           </TouchableOpacity>
         </View>
-          
+
             <TouchableOpacity
               style={[styles.button, isAnimating && styles.buttonDisabled]}
               onPress={startAnimation}
@@ -368,9 +369,9 @@ export default function LetterAnimation({ navigation, route }) {
             <TouchableOpacity style={styles.button} onPress={replayAudio}>
               <Text style={styles.buttonText}>Replay</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.speakButton} onPress={goToNextWord}>
+            {/* <TouchableOpacity style={styles.speakButton} onPress={goToNextWord}>
             <Text style={styles.buttonText}>Next</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           </>
         )}
 
