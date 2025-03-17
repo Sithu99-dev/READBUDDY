@@ -1,610 +1,531 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, Modal } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import questionsData from '../data/Reading_Activity.json';
 import storage from '@react-native-firebase/storage';
-import firestore from '@react-native-firebase/firestore';
-import { AppContext } from '../App.tsx';
-import { myurl } from '../data/url'; // Adjust path as needed
+import React, { useRef, useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Alert,
+  ActivityIndicator,
+  ImageBackground,
+  SafeAreaView,
+} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import SignatureScreen from 'react-native-signature-canvas';
+import Tts from 'react-native-tts';
+import Video from 'react-native-video';
+import writingWordsData from '../data/writing_words.json';
+import lettersData from '../data/letters.json';
+import { myurl } from '../data/url';
 
-export default function ReadingChallenge({ navigation }) {
-  const [currentLevel, setCurrentLevel] = useState(1);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [currentQuestions, setCurrentQuestions] = useState([]);
-  const [score, setScore] = useState(0);
-  const [gameState, setGameState] = useState('splash');
-  const [imageUrl, setImageUrl] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { loggedInUser } = useContext(AppContext);
-  // New state for correct answer popup
-  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
-  const [correctWord, setCorrectWord] = useState('');
-  const [correctWordProps, setCorrectWordProps] = useState({
-    fontSize: 24,
-    space: 2,
-    hLetters: [],
-    color: 'red'
-  });
+export default function WLevel1({ navigation, route }) {
+  const signatureRef = useRef(null);
+  const level = route.params?.level || 1;
+  const [modelResult, setModelResult] = useState([]); // Current word result
+  const [allResults, setAllResults] = useState([]); // Results for all 5 words
+  const [currentWord, setCurrentWord] = useState(null);
+  const [wordList, setWordList] = useState([]); // 5 selected words
+  const [currentWordIndex, setCurrentWordIndex] = useState(0); // Index in wordList
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [videoQueue, setVideoQueue] = useState([]);
 
-  const levelStructure = {
-    1: ['1-1', '1-2', '1-3', '1-4', '1-5'],
-    2: ['2-1', '2-2', '2-3', '2-4'],
-    3: ['3-1', '3-2', '3-3', '3-4', '3-5'],
-    4: ['4-1', '4-2', '4-3'],
-    5: ['5-1', '5-2', '5-3'],
-  };
+  const levelWords = writingWordsData.filter((word) => word.level === String(level));
 
-  useEffect(() => {
-    console.log('Component mounted, loading level:', currentLevel);
-    loadLevelQuestions();
-    // Show splash screen for 2 seconds when level changes
-    setGameState('splash');
-    const timer = setTimeout(() => {
-      setGameState('playing');
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, [currentLevel]);
-
-  useEffect(() => {
-    const fetchImage = async () => {
-      const question = currentQuestions[currentQuestionIndex];
-      if (question && question.image) {
-        console.log('Fetching image for:', question.image);
-        try {
-          const storageRef = storage().ref(question.image);
-          const url = await storageRef.getDownloadURL();
-          console.log('Image URL resolved:', url);
-          setImageUrl(url);
-        } catch (error) {
-          console.log('Image fetch error:', error);
-          setImageUrl(null);
-        }
-      } else {
-        console.log('No valid question or image at index:', currentQuestionIndex);
-        setImageUrl(null);
-      }
-    };
-    fetchImage();
-  }, [currentQuestions, currentQuestionIndex]);
-
-  useEffect(() => {
-    if (gameState === 'results') {
-      const totalQuestions = currentQuestions.length;
-      saveScoreToFirestore(currentLevel, score, totalQuestions);
-    }
-  }, [gameState, currentLevel, score, currentQuestions]);
-
-  const loadLevelQuestions = () => {
-    setIsLoading(true);
-    const sets = levelStructure[currentLevel];
-    console.log('Loading sets for level', currentLevel, ':', sets);
-    const selectedQuestions = sets
-      .map((set) => {
-        const setQuestions = questionsData.filter(
-          (q) => q.level === currentLevel && q['q-set'] === set
-        );
-        console.log(`Found ${setQuestions.length} questions for set ${set}`);
-        if (setQuestions.length === 0) {
-          console.log(`Warning: No questions for set ${set}`);
-          return null;
-        }
-        const randomQuestion = setQuestions[Math.floor(Math.random() * setQuestions.length)];
-        console.log('Picked question:', randomQuestion);
-        return randomQuestion;
-      })
-      .filter((q) => q !== null);
-    console.log('Final questions array:', selectedQuestions);
-    setCurrentQuestions(selectedQuestions);
-    setCurrentQuestionIndex(0);
-    setScore(0);
-    setImageUrl(null);
-    setIsLoading(false);
-  };
-
-  const renderWord = (word, fontSize, space, hLetters, color) => {
-    if (!word) return <Text>Invalid word</Text>;
-    const normalizedHLetters = hLetters.map((letter) => letter.toLowerCase());
-    console.log('Rendering word:', word, 'hLetters:', normalizedHLetters, 'color:', color);
-    return word.split('').map((char, index) => {
-      const isHighlighted = normalizedHLetters.includes(char.toLowerCase());
-      return (
-        <Text
-          key={index}
-          style={{
-            fontSize,
-            letterSpacing: space,
-            color: isHighlighted ? color : 'black',
-            fontWeight: currentLevel > 2 ? 'bold' : 'normal',
-          }}
-        >
-          {char}
-        </Text>
-      );
-    });
-  };
-
-  const handleAnswer = (isCorrect) => {
-    console.log('Answer chosen, isCorrect:', isCorrect);
-    
-    if (isCorrect) {
-      // If correct, add to score and proceed to next question
-      setScore(score + 1);
-      goToNextQuestion();
-    } else {
-      // If incorrect, show the correct answer popup
-      const currentQuestion = currentQuestions[currentQuestionIndex];
-      setCorrectWord(currentQuestion.correct_word);
-      setCorrectWordProps({
-        fontSize: currentQuestion.font_size || 24,
-        space: currentQuestion.space || 2,
-        hLetters: currentQuestion.h_letter || [],
-        color: currentQuestion.color || 'red'
-      });
-      setShowCorrectAnswer(true);
-      
-      // Automatically close popup after 2 seconds and go to next question
-      setTimeout(() => {
-        setShowCorrectAnswer(false);
-        goToNextQuestion();
-      }, 2000);
-    }
-  };
-  
-  const goToNextQuestion = () => {
-    if (currentQuestionIndex + 1 < currentQuestions.length) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      setGameState('results');
-    }
-  };
-
-  const saveScoreToFirestore = async (level, score, totalQuestions) => {
-    if (!loggedInUser) {
-      console.log('No logged-in user, skipping Firestore update');
-      return;
-    }
-    const textScore = `${level}.${score}`;
+  const click = async () => {
     try {
-      // Step 1: Save score to Firestore
-      console.log('Saving textScore to Firestore:', textScore);
-      await firestore()
-        .collection('snake_game_leadersboard')
-        .doc(loggedInUser)
-        .set({ textScore }, { merge: true });
-      console.log(`Saved textScore: ${textScore} for user: ${loggedInUser}`);
-  
-      // Step 2: Fetch user's current textSettings
-      console.log('Fetching user document from Firestore');
-      const userDoc = await firestore()
-        .collection('snake_game_leadersboard')
-        .doc(loggedInUser)
-        .get();
-  
-      if (!userDoc.exists) {
-        throw new Error('User document does not exist');
-      }
-  
-      // Get the text settings and ensure all properties exist
-      const rawTextSettings = userDoc.data()?.textSettings || {};
-      
-      // Create a new object with all required properties for each letter
-      const textSettings = {};
-      Object.keys(rawTextSettings).forEach(letter => {
-        textSettings[letter] = {
-          fontSize: rawTextSettings[letter].fontSize || 16,
-          color: rawTextSettings[letter].color || 'black',
-          bold: rawTextSettings[letter].bold !== undefined ? rawTextSettings[letter].bold : false
-        };
-      });
-      
-      console.log('Processed textSettings:', textSettings);
-  
-      // Step 3: Call the /readchallenge API
-      const apiUrl = `${myurl}/readchallenge`;
-      console.log('Calling API at:', apiUrl);
-      console.log('Request payload:', { user_id: loggedInUser, text_score: textScore, text_settings: textSettings });
-  
-      const response = await fetch(apiUrl, {
+      const response = await fetch(myurl + '/words', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          user_id: loggedInUser,
-          text_score: textScore,
-          text_settings: textSettings,
-        }),
+        body: JSON.stringify({ word: currentWord.word }),
       });
-  
-      // Log the raw response text before parsing
-      const responseText = await response.text();
-      console.log('Raw API response:', responseText);
-  
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      const data = await response.json();
+      console.log('API Response:', data);
+      // Convert 0/1 to false/true
+      const result = data["res"].map((val) => val !== 0);
+      return result;
+    } catch (error) {
+      console.error('Error fetching model result:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    resetLevel();
+  }, [level]);
+
+  const capitalizeFirstLetter = (word) => {
+    if (!word) return '';
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  };
+
+  const selectFiveWords = () => {
+    const shuffled = [...levelWords].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, Math.min(5, levelWords.length)).map((word) => ({
+      ...word,
+      word: capitalizeFirstLetter(word.word),
+    }));
+    return selected;
+  };
+
+  const resetLevel = () => {
+    const newWordList = selectFiveWords();
+    setWordList(newWordList);
+    setCurrentWord(newWordList[0]);
+    setCurrentWordIndex(0);
+    setCurrentLetterIndex(0);
+    setModelResult([]);
+    setAllResults([]);
+    setVideoUrl(null);
+    setVideoQueue([]);
+  };
+
+  const moveToNextWord = () => {
+    if (currentWordIndex + 1 < wordList.length) {
+      setCurrentWord(wordList[currentWordIndex + 1]);
+      setCurrentWordIndex(currentWordIndex + 1);
+      setCurrentLetterIndex(0);
+      setModelResult([]);
+      setVideoUrl(null);
+      setVideoQueue([]);
+    } else {
+      checkLevelCompletion();
+    }
+  };
+
+  const checkLevelCompletion = () => {
+    const allCorrect = allResults.every((result) => result.every((res) => res === true));
+    if (allCorrect) {
+      Alert.alert(
+        'Congratulations!',
+        `You've completed Level ${level} perfectly!`,
+        [{ text: 'Back to Levels', onPress: () => navigation.goBack() }]
+      );
+    } else {
+      Alert.alert(
+        'Keep Going!',
+        'Some answers were incorrect. Try this level again to improve!',
+        [
+          { text: 'Try Again', onPress: () => resetLevel() },
+          { text: 'Back to Levels', onPress: () => navigation.goBack() },
+        ]
+      );
+    }
+  };
+
+  const playAudio = () => {
+    try {
+      if (currentWord) {
+        Tts.setDefaultLanguage('en-US');
+        Tts.setDefaultRate(0.3);
+        Tts.speak(currentWord.word);
+        console.log(`TTS: Speaking "${currentWord.word}"`);
       }
-  
-      // Attempt to parse as JSON
-      const result = JSON.parse(responseText);
-      console.log('Parsed API response:', result);
-  
-      if (result.status === 'success') {
-        console.log('Successfully updated clustering and recommendations');
+    } catch (e) {
+      console.log('Error with TTS:', e);
+      Alert.alert('Error', 'Failed to speak');
+    }
+  };
+
+  const clearCanvas = () => {
+    console.log('Clear button pressed');
+    if (signatureRef.current) {
+      signatureRef.current.clearSignature();
+      console.log('Clear signature called');
+    } else {
+      console.log('Signature ref is not ready');
+    }
+  };
+
+  const nextLetter = () => {
+    console.log('Next button pressed');
+    if (signatureRef.current) {
+      setLoading(true);
+      signatureRef.current.readSignature();
+    } else {
+      console.log('Signature ref is not ready');
+    }
+  };
+
+  const submitWord = () => {
+    console.log('Submit button pressed');
+    if (signatureRef.current) {
+      setLoading(true);
+      signatureRef.current.readSignature();
+    } else {
+      console.log('Signature ref is not ready');
+    }
+  };
+
+  const uploadSignature = async (base64Data) => {
+    try {
+      if (!base64Data || base64Data.length < 50) {
+        console.log('Invalid or empty base64 data:', base64Data);
+        Alert.alert('Error', 'Please draw something before submitting');
+        setLoading(false);
+        return;
+      }
+      const base64String = base64Data.replace(/^data:image\/\w+;base64,/, '');
+      const storageRef = storage().ref(`screenshots/img_${currentLetterIndex}.jpg`);
+      await storageRef.putString(base64String, 'base64', { contentType: 'image/jpeg' });
+      console.log(`Uploaded img_${currentLetterIndex}.jpg`);
+
+      clearCanvas();
+
+      if (currentLetterIndex < currentWord.word.length - 1) {
+        setCurrentLetterIndex(currentLetterIndex + 1);
+        setLoading(false);
       } else {
-        throw new Error(`API returned error: ${result.message}`);
+        const result = await click();
+        console.log('Model Result:', result);
+        if (result === null) {
+          setLoading(false);
+          Alert.alert('Error', 'Failed to get model result. Please try again.');
+          return;
+        }
+
+        setModelResult(result);
+        setAllResults([...allResults, result]);
+        setLoading(false);
+
+        if (result.every((res) => res === true)) {
+          console.log('All letters correct, moving to next word');
+          moveToNextWord();
+        } else {
+          console.log('Some letters incorrect, queuing videos');
+          const incorrectIndices = result
+            .map((res, idx) => (res === false ? idx : null))
+            .filter((idx) => idx !== null);
+          const videosToPlay = incorrectIndices.map((idx) => {
+            const letter = currentWord.word[idx];
+            const letterData = lettersData.find((l) => l.letter === letter);
+            return letterData ? letterData.answer : null;
+          }).filter(Boolean);
+          console.log('Videos to play:', videosToPlay);
+
+          if (videosToPlay.length > 0) {
+            setVideoQueue(videosToPlay);
+            loadFirstVideo(videosToPlay);
+          } else {
+            console.log('No videos available, moving to next word');
+            moveToNextWord();
+          }
+        }
       }
     } catch (error) {
-      console.error('Error in saveScoreToFirestore:', error.message || error);
-      Alert.alert('Error', `Failed to save score or update recommendations: ${error.message || 'Unknown error'}`);
+      console.error('Error uploading signature:', error);
+      Alert.alert('Error', 'Failed to upload signature');
+      setLoading(false);
     }
   };
 
-  const handleNextLevel = () => {
-    if (currentLevel < 5) {
-      setCurrentLevel(currentLevel + 1);
-    } else {
-      Alert.alert('Congratulations!', 'You\'ve completed all levels!');
-      navigation.goBack();
+  const loadFirstVideo = async (queue) => {
+    if (queue.length > 0) {
+      const videoPath = queue[0];
+      try {
+        const videoRef = storage().ref(videoPath);
+        const url = await videoRef.getDownloadURL();
+        setVideoUrl(url);
+      } catch (error) {
+        console.error('Error fetching video:', error);
+        Alert.alert('Error', 'Failed to fetch video');
+        setVideoQueue(queue.slice(1));
+        loadFirstVideo(queue.slice(1));
+      }
     }
   };
 
-  const handleRetry = () => {
-    // Keep the same level when retrying
-    loadLevelQuestions();
-    setGameState('splash');
-    
-    // Show splash screen for 2 seconds when retrying level
-    setTimeout(() => {
-      setGameState('playing');
-    }, 2000);
-  };
-
-  // Determine the font family based on current level
-  const getFontFamily = () => {
-    if (currentLevel <= 2) {
-      return 'OpenDyslexic3-Regular';
-    } else {
-      return 'normal'; 
+  const nextVideo = () => {
+    if (videoQueue.length > 0) {
+      const nextQueue = videoQueue.slice(1);
+      setVideoQueue(nextQueue);
+      if (nextQueue.length > 0) {
+        loadFirstVideo(nextQueue);
+      } else {
+        setVideoUrl(null);
+        moveToNextWord();
+      }
     }
   };
 
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#4eb3af" />
-        <Text>Loading game...</Text>
-      </View>
-    );
-  }
+  const getOrdinal = (index) => {
+    const n = index + 1;
+    if (n % 10 === 1 && n % 100 !== 11) return `${n}st`;
+    if (n % 10 === 2 && n % 100 !== 12) return `${n}nd`;
+    if (n % 10 === 3 && n % 100 !== 13) return `${n}rd`;
+    return `${n}th`;
+  };
 
-  // Level splash screen
-  if (gameState === 'splash') {
-    return (
-      <View style={styles.splashContainer}>
-        <LinearGradient
-          style={styles.levelCircle}
-          colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 0}}
-        >
-          <Text style={styles.levelNumber}>{currentLevel}</Text>
-        </LinearGradient>
-        <Text style={styles.splashText}>Level {currentLevel}</Text>
-        <Text style={styles.splashSubText}>Get ready!</Text>
-      </View>
-    );
-  }
-
-  if (gameState === 'results') {
-    const totalQuestions = currentQuestions.length;
-    const passed = score === totalQuestions;
-
-    return (
-      <View style={styles.resultsContainer}>
-        <Text style={styles.resultsHeader}>Level {currentLevel} Results</Text>
-        <Text style={styles.scoreText}>
-          Score: {score} / {totalQuestions}
-        </Text>
-        <Text style={styles.resultText}>
-          {passed ? 'Well done! You passed!' : 'Try again to pass.'}
-        </Text>
-        {passed ? (
-          <TouchableOpacity style={styles.actionButton} onPress={handleNextLevel}>
-            <Text style={styles.actionButtonText}>
-              {currentLevel < 5 ? 'Next Level' : 'Finish'}
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.actionButton} onPress={handleRetry}>
-            <Text style={styles.actionButtonText}>Retry Level</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  }
-
-  const currentQuestion = currentQuestions[currentQuestionIndex];
-  if (!currentQuestion) {
-    return (
-      <View style={styles.container}>
-        <Text>No questions available for this level.</Text>
-      </View>
-    );
-  }
-
-  const { correct_word, incorrect_word, font_size, space, h_letter, color } = currentQuestion;
-  console.log('Rendering currentQuestion:', currentQuestion);
-  const answers = [
-    { text: correct_word, isCorrect: true },
-    { text: incorrect_word, isCorrect: false },
-  ];
-  const shuffledAnswers = [...answers].sort(() => Math.random() - 0.5);
+  const webStyle = `
+    .m-signature-pad { width: 100%; height: 100%; margin: 0; padding: 0; }
+    .m-signature-pad--body { border: none; width: 100%; height: 100%; }
+    canvas { width: 100%; height: 100%; background-color: white; }
+    .m-signature-pad--footer { display: none; }
+    body { margin: 0; }
+  `;
 
   return (
-    <View style={styles.pageContainer}>
-      {/* Level indicator circle with gradient */}
-      <LinearGradient
-        style={styles.levelCircle}
-        colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
-        start={{x: 0, y: 0}}
-        end={{x: 1, y: 0}}
-      >
-        <Text style={styles.levelNumber}>{currentQuestionIndex + 1}</Text>
-      </LinearGradient>
+    <ImageBackground source={require('../assets/bg7.jpg')} style={styles.background} imageStyle={{opacity: 0.3}}>
+      <SafeAreaView style={styles.container}>
+        {!videoUrl && (
+          <>
+            <View style={styles.instructionCard}>
+              <Text style={styles.instructionText}>
+                Tap the speaker button to hear the pronunciation of the word.
+              </Text>
+              
+              <Text style={styles.instructionText}>
+                Listen carefully to the word.
+              </Text>
+              
+              <Text style={styles.instructionText}>
+                Type the word one letter at a time by clicking the Next button after each letter.
+              </Text>
+              
+              <Text style={styles.highlightText}>
+                1st letter should be capital
+              </Text>
+              
+              <LinearGradient
+                style={styles.speakerButton}
+                colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+              >
+                <TouchableOpacity onPress={playAudio} style={styles.speakerTouchable}>
+                  <Image source={require('../assets/speaker0.png')} style={styles.speakerIcon} />
+                </TouchableOpacity>
+              </LinearGradient>
+            </View>
+            
+            <View style={styles.signatureCardContainer}>
+              <View style={styles.signatureCard}>
+                <View style={styles.canvasContainer}>
+                  <SignatureScreen
+                    ref={signatureRef}
+                    webStyle={webStyle}
+                    onOK={uploadSignature}
+                    onEmpty={() => console.log('Signature is empty')}
+                    onBegin={() => console.log('Drawing started')}
+                    onEnd={() => console.log('Drawing ended')}
+                  />
+                </View>
+                
+                {/* Action buttons at the bottom of the white card */}
+                <View style={styles.actionButtonsContainer}>
+                  <TouchableOpacity
+                    onPress={clearCanvas}
+                    disabled={loading}
+                    style={styles.buttonTouchable}
+                  >
+                    <LinearGradient
+                      style={styles.actionButton}
+                      colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+                      start={{x: 0, y: 0}}
+                      end={{x: 1, y: 0}}
+                    >
+                      <Text style={styles.actionButtonText}>CLEAR</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    onPress={currentLetterIndex < (currentWord?.word.length - 1 || 0) ? nextLetter : submitWord}
+                    disabled={loading}
+                    style={styles.buttonTouchable}
+                  >
+                    <LinearGradient
+                      style={styles.actionButton}
+                      colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+                      start={{x: 0, y: 0}}
+                      end={{x: 1, y: 0}}
+                    >
+                      <Text style={styles.actionButtonText}>NEXT</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </>
+        )}
 
-      <View style={styles.questionCard}>
-        <Text style={styles.questionText}>Choose the correct answer?</Text>
-        
-        {imageUrl ? (
-          <Image
-            source={{ uri: imageUrl }}
-            style={styles.image}
-            onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
-            onLoad={() => console.log('Image loaded successfully')}
-          />
-        ) : (
-          <View style={styles.imagePlaceholder}>
-            <Text>Image not available</Text>
+        {videoUrl && (
+          <View style={styles.videoContainer}>
+            <Text style={styles.videoTxt}>Nice Try! Here is the correct way to write it</Text>
+            <Video
+              source={{ uri: videoUrl }}
+              style={styles.video}
+              controls={true}
+              resizeMode="contain"
+              onLoad={() => console.log('Video loaded')}
+              onError={(e) => {
+                console.log('Video error:', e.error);
+                Alert.alert('Error', 'Failed to play video');
+                nextVideo();
+              }}
+            />
+            <TouchableOpacity onPress={nextVideo} style={styles.nextVideoBtn}>
+              <Text style={styles.nextVideoBtnText}>Next</Text>
+            </TouchableOpacity>
           </View>
         )}
-        
-        {/* Answer Options */}
-        <View style={styles.answerContainer}>
-          {shuffledAnswers.map((answer, index) => {
-            // Calculate dynamic height based on font size
-            const buttonHeight = font_size ? Math.max(font_size * 2.5, 60) : 60;
-            
-            return (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.answerButton,
-                  { height: buttonHeight } // Apply dynamic height
-                ]}
-                onPress={() => handleAnswer(answer.isCorrect)}
-              >
-                <View style={styles.answerTextContainer}>
-                  <Text style={[
-                    styles.answerText,
-                    { fontFamily: getFontFamily() }
-                  ]}>
-                    {renderWord(answer.text, font_size || 24, space || 2, h_letter || [], color || 'red')}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
 
-      {/* Correct Answer Popup Modal */}
-      <Modal
-        transparent={true}
-        visible={showCorrectAnswer}
-        animationType="fade"
-        onRequestClose={() => setShowCorrectAnswer(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Correct Answer:</Text>
-            <View style={styles.modalAnswer}>
-              <Text style={[
-                styles.answerText,
-                { fontFamily: getFontFamily() }
-              ]}>
-                {renderWord(
-                  correctWord,
-                  correctWordProps.fontSize,
-                  correctWordProps.space,
-                  correctWordProps.hLetters,
-                  correctWordProps.color
-                )}
-              </Text>
-            </View>
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#4e9ede" />
+            <Text style={styles.loadingText}>Uploading...</Text>
           </View>
-        </View>
-      </Modal>
-    </View>
+        )}
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  // Main container styles
-  pageContainer: {
+  background: {
     flex: 1,
-    backgroundColor: '#6cbec9', // Teal background like in the screenshot
-    alignItems: 'center',
-    paddingTop: 50,
-    paddingHorizontal: 16,
+    width: '100%',
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#6cbec9',
+    paddingVertical: 20,
+    paddingHorizontal: 15,
   },
-  
-  // Level circle indicator
-  levelCircle: {
+  instructionCard: {
+    width: '100%',
+    backgroundColor: 'rgba(151, 216, 196, 0.9)',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  instructionText: {
+    fontSize: 18,
+    color: 'black',
+    textAlign: 'center',
+    marginBottom: 15,
+    fontWeight: '500',
+  },
+  highlightText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  speakerButton: {
     width: 70,
     height: 70,
     borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
-    // Removed backgroundColor since it's now handled by the gradient
+    overflow: 'hidden',
   },
-  levelNumber: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  
-  // Question card
-  questionCard: {
-    backgroundColor: '#e1e1e1', // Light gray card background
-    borderRadius: 20,
-    padding: 20,
+  speakerTouchable: {
     width: '100%',
-    alignItems: 'center',
-    minHeight: '70%',
-  },
-  questionText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  
-  // Image styles
-  image: {
-    width: 250,
-    height: 250,
-    marginVertical: 20,
-    borderRadius: 10,
-  },
-  imagePlaceholder: {
-    width: 250,
-    height: 250,
-    backgroundColor: '#d9d9d9',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 20,
-    borderRadius: 10,
   },
-  
-  // Answer buttons
-  answerContainer: {
+  speakerIcon: {
+    width: 40,
+    height: 40,
+    tintColor: 'white',
+  },
+  signatureCardContainer: {
     width: '100%',
-    marginTop: 20,
-  },
-  answerButton: {
-    backgroundColor: '#ffffff',
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-    width: '100%',
-  },
-  answerTextContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 5,
-  },
-  answerText: {
-    textAlign: 'center',
-    fontSize: 24,
-    flexDirection: 'row',
-    display: 'flex',
-  },
-  
-  // Splash screen
-  splashContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#6cbec9',
-  },
-  splashText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: 'white',
-    marginTop: 20,
-  },
-  splashSubText: {
-    fontSize: 24,
-    color: 'white',
-    marginTop: 10,
-  },
-  
-  // Results screen
-  resultsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#6cbec9',
-    padding: 20,
-  },
-  resultsHeader: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 20,
-  },
-  scoreText: {
-    fontSize: 24,
-    color: 'white',
     marginVertical: 10,
   },
-  resultText: {
-    fontSize: 22,
-    color: 'white',
-    marginBottom: 30,
-    textAlign: 'center',
+  signatureCard: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'white',
+    borderRadius: 15,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    justifyContent: 'space-between', // Ensures the buttons are at the bottom
+  },
+  canvasContainer: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: 'white',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    backgroundColor: 'white',
+  },
+  buttonTouchable: {
+    width: '48%',
+    overflow: 'hidden',
   },
   actionButton: {
-    backgroundColor: '#ffffff',
     paddingVertical: 15,
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
     borderRadius: 30,
-    elevation: 5,
-    marginTop: 20,
+    width: '100%',
+    alignItems: 'center',
   },
   actionButtonText: {
-    fontSize: 20,
+    color: 'white',
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#4eb3af',
   },
-  
-  // Modal popup styles
-  modalContainer: {
-    flex: 1,
+  videoContainer: {
+    width: '100%',
+    height: '80%',
+    backgroundColor: 'black',
+    borderRadius: 15,
+    padding: 15,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    marginVertical: 20,
   },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    width: '80%',
-    alignItems: 'center',
-    elevation: 5,
+  video: {
+    width: '100%',
+    height: '80%',
   },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
+  videoTxt: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: 'white',
+    textAlign: 'center',
     marginBottom: 15,
   },
-  modalAnswer: {
-    padding: 15,
-    borderRadius: 15,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
+  nextVideoBtn: {
+    backgroundColor: '#4e9ede',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    marginTop: 15,
+  },
+  nextVideoBtnText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
-    minHeight: 60,
-  }
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 18,
+    marginTop: 10,
+  },
 });
