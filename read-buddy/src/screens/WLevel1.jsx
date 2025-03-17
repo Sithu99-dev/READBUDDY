@@ -45,7 +45,7 @@ export default function WLevel1({ navigation, route }) {
       const data = await response.json();
       console.log('API Response:', data);
       // Convert 0/1 to false/true
-      const result = data["res"].map((val) => val !== 0);
+      const result = data.res.map((val) => val !== 0);
       return result;
     } catch (error) {
       console.error('Error fetching model result:', error);
@@ -58,7 +58,7 @@ export default function WLevel1({ navigation, route }) {
   }, [level]);
 
   const capitalizeFirstLetter = (word) => {
-    if (!word) return '';
+    if (!word) {return '';}
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
   };
 
@@ -253,9 +253,9 @@ export default function WLevel1({ navigation, route }) {
 
   const getOrdinal = (index) => {
     const n = index + 1;
-    if (n % 10 === 1 && n % 100 !== 11) return `${n}st`;
-    if (n % 10 === 2 && n % 100 !== 12) return `${n}nd`;
-    if (n % 10 === 3 && n % 100 !== 13) return `${n}rd`;
+    if (n % 10 === 1 && n % 100 !== 11) {return `${n}st`;}
+    if (n % 10 === 2 && n % 100 !== 12) {return `${n}nd`;}
+    if (n % 10 === 3 && n % 100 !== 13) {return `${n}rd`;}
     return `${n}th`;
   };
 
@@ -268,7 +268,7 @@ export default function WLevel1({ navigation, route }) {
   `;
 
   return (
-    <ImageBackground source={require('../assets/bg7.jpg')} style={styles.background} imageStyle={{opacity: 0.3}}>
+    <ImageBackground source={require('../assets/sp.png')} style={styles.background} imageStyle={{opacity: 0.3}}>
       <SafeAreaView style={styles.container}>
         {!videoUrl && (
           <>
@@ -276,24 +276,24 @@ export default function WLevel1({ navigation, route }) {
               <Text style={styles.instructionText}>
                 Tap the speaker button to hear the pronunciation of the word.
               </Text>
-              
+
               <Text style={styles.instructionText}>
                 Listen carefully to the word.
               </Text>
-              
+
               <Text style={styles.instructionText}>
                 Type the word one letter at a time by clicking the Next button after each letter.
               </Text>
-              
+
               <Text style={styles.highlightText}>
                 1st letter should be capital
               </Text>
-              
+
               <TouchableOpacity onPress={playAudio} style={styles.speakerButton}>
                 <Image source={require('../assets/speaker0.png')} style={styles.speakerIcon} />
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.signatureCardContainer}>
               <View style={styles.signatureCard}>
                 <View style={styles.canvasContainer}>
@@ -306,7 +306,7 @@ export default function WLevel1({ navigation, route }) {
                     onEnd={() => console.log('Drawing ended')}
                   />
                 </View>
-                
+
                 {/* Action buttons at the bottom of the white card */}
                 <View style={styles.actionButtonsContainer}>
                   <TouchableOpacity
@@ -316,7 +316,7 @@ export default function WLevel1({ navigation, route }) {
                   >
                     <Text style={styles.actionButtonText}>CLEAR</Text>
                   </TouchableOpacity>
-                  
+
                   {currentLetterIndex < (currentWord?.word.length - 1 || 0) ? (
                     <TouchableOpacity
                       style={styles.actionButton}
