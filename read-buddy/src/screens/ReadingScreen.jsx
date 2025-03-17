@@ -11,6 +11,10 @@ export default function ReadingScreen({ navigation }) {
             <Text style={styles.title}>Let's Read</Text>
           </View>
           <View style={styles.buttonsContainer}>
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Text Input')}>
+              {/* <Text style={styles.buttonTextIcon}>1</Text> */}
+              <Text style={styles.buttonText}>Write & Read</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Text Reading')}>
               {/* <Text style={styles.buttonTextIcon}>1</Text> */}
               <Text style={styles.buttonText}>Text Reading</Text>

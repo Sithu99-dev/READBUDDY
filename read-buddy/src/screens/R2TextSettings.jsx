@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Switch,
+  Alert,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
@@ -13,7 +14,7 @@ import firestore from '@react-native-firebase/firestore';
 import { AppContext } from '../App.tsx';
 
 export default function R2TextSettings({ navigation, route }) {
-  const { scannedText, letterSettings: initialSettings } = route.params || {};
+  const { scannedText, inputText, letterSettings: initialSettings } = route.params || {};
   const [letterSettings, setLetterSettings] = useState(initialSettings || {});
   const { loggedInUser } = useContext(AppContext);
 
@@ -54,9 +55,8 @@ export default function R2TextSettings({ navigation, route }) {
 
   const renderSentence = (sentence) => {
     return sentence.split('').map((char, index) => {
-      const lowerChar = char.toLowerCase();
       const settings =
-        letterSettings[lowerChar] || {
+        letterSettings[char] || {
           fontSize: 18,
           color: 'black',
           bold: false,
@@ -79,18 +79,18 @@ export default function R2TextSettings({ navigation, route }) {
 
   const saveSettingsToFirestore = async () => {
     if (!loggedInUser) {
-      alert('Error: User not logged in');
+      Alert.alert('Error', 'User not logged in');
       return;
     }
     try {
       await firestore()
         .collection('snake_game_leadersboard')
         .doc(loggedInUser)
-        .set({ textSettings: letterSettings }, { merge: true }); // Use set with merge to avoid overwriting other fields
-      navigation.navigate('Scanned Text', { scannedText, letterSettings });
+        .set({ textSettings: letterSettings }, { merge: true });
+      Alert.alert('Success', 'Settings Applied');
     } catch (error) {
       console.error('Error saving settings:', error);
-      alert('Failed to save settings');
+      Alert.alert('Error', 'Failed to save settings');
     }
   };
 

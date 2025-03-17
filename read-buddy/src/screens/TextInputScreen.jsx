@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { AppContext } from '../App.tsx';
 
-export default function R1Scanned({ navigation, route }) {
-  const scannedText = route.params?.scannedText || 'No text scanned yet';
+export default function TextInputScreen({ navigation, route }) {
+  const [inputText, setInputText] = useState('');
   const [letterSettings, setLetterSettings] = useState({});
   const { loggedInUser } = useContext(AppContext);
 
@@ -80,17 +87,38 @@ export default function R1Scanned({ navigation, route }) {
 
   return (
     <View style={styles.outerContainer}>
+      {/* Fixed Heading */}
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerText}>Write your text here</Text>
+      </View>
+
+      {/* Scrollable Input and Rendered Text */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
       >
-        <View style={styles.textWrapper}>{renderLines(scannedText)}</View>
+        <TextInput
+          style={styles.textInput}
+          multiline
+          placeholder="Type your text here..."
+          value={inputText}
+          onChangeText={setInputText}
+        />
+        {inputText ? (
+          <View style={styles.textWrapper}>{renderLines(inputText)}</View>
+        ) : null}
       </ScrollView>
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Text Settings', { scannedText, letterSettings })}
-      >
-        <Text style={styles.positiveBtn}>Text Settings</Text>
-      </TouchableOpacity>
+
+      {/* Fixed Text Settings Button */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('Text Settings', { inputText, letterSettings })
+          }
+        >
+          <Text style={styles.positiveBtn}>Text Settings</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -98,18 +126,44 @@ export default function R1Scanned({ navigation, route }) {
 const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  headerContainer: {
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    right: 0,
     alignItems: 'center',
+    zIndex: 1,
+    padding: 10,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2c3e50',
   },
   scrollView: {
+    flex: 1,
     width: '100%',
-    flexGrow: 1,
+    marginTop: 70,
+    marginBottom: 60,
   },
   contentContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 10,
+    paddingBottom: 20,
+  },
+  textInput: {
+    width: '100%',
+    minHeight: 100,
+    maxHeight: 200,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    padding: 10,
+    fontSize: 18,
+    color: '#000',
+    textAlignVertical: 'top',
+    marginBottom: 20,
   },
   textWrapper: {
     alignItems: 'center',
@@ -121,6 +175,15 @@ const styles = StyleSheet.create({
   },
   word: {
     flexShrink: 0,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 1,
+    padding: 10,
   },
   positiveBtn: {
     fontSize: 15,
