@@ -12,6 +12,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import SignatureScreen from 'react-native-signature-canvas';
+import LinearGradient from 'react-native-linear-gradient';
+import { Dimensions } from 'react-native';
 import Tts from 'react-native-tts';
 import Video from 'react-native-video';
 import writingWordsData from '../data/writing_words.json';
@@ -341,36 +343,63 @@ export default function WLevel1({ navigation, route }) {
         )}
 
         {videoUrl && (
-          <View style={styles.videoContainer}>
-            <Text style={styles.videoTxt}>Nice Try! Here is the correct way to write it</Text>
-            <Video
-              source={{ uri: videoUrl }}
-              style={styles.video}
-              controls={true}
-              resizeMode="contain"
-              onLoad={() => console.log('Video loaded')}
-              onError={(e) => {
-                console.log('Video error:', e.error);
-                Alert.alert('Error', 'Failed to play video');
-                nextVideo();
-              }}
-            />
-            <TouchableOpacity onPress={nextVideo} style={styles.nextVideoBtn}>
-              <Text style={styles.nextVideoBtnText}>Next</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+  <View style={styles.mainContainer}>
+  <View style={styles.feedbackContainer}>
+    <Text style={styles.feedbackText}>
+      Nice try! You're doing great!{'\n'}
+      Let's work on writing the{'\n'}
+      correct letter.
+    </Text>
+    <Image 
+      source={require('../assets/mascot.png')} // Replace with your actual mascot image
+      style={styles.mascotImage}
+    />
+  </View>
+  
+  <View style={styles.videoContainer}>
+    <Text style={styles.videoLabel}>video</Text>
+    <Video
+      source={{ uri: videoUrl }}
+      style={styles.video}
+      controls={true}
+      resizeMode="contain"
+      onLoad={() => console.log('Video loaded')}
+      onError={(e) => {
+        console.log('Video error:', e.error);
+        Alert.alert('Error', 'Failed to play video');
+        nextVideo();
+      }}
+    />
+  </View>
+  
+  <TouchableOpacity 
+    onPress={nextVideo} 
+    style={styles.buttonTouchable}
+  >
+    <LinearGradient
+      style={styles.nextButton}
+      colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 0}}
+    >
+      <Text style={styles.nextButtonText}>NEXT</Text>
+    </LinearGradient>
+  </TouchableOpacity>
+</View>
+)}
 
-        {loading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#4e9ede" />
-            <Text style={styles.loadingText}>Uploading...</Text>
-          </View>
-        )}
-      </SafeAreaView>
-    </ImageBackground>
-  );
+{loading && (
+<View style={styles.loadingOverlay}>
+  <ActivityIndicator size="large" color="#4e9ede" />
+  <Text style={styles.loadingText}>Uploading...</Text>
+</View>
+)}
+</SafeAreaView>
+</ImageBackground>
+);
 }
+
+const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   background: {
@@ -383,6 +412,80 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 15,
   },
+  mainContainer: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  feedbackContainer: {
+    width: '100%',
+    height: height * 0.3,
+    backgroundColor: 'rgba(151, 216, 196, 0.8)',
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 5,
+    position: 'relative',
+  },
+  feedbackText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'navy',
+    textAlign: 'center',
+    flex: 1,
+  },
+  mascotImage: {
+    width: 100,
+    height: 180,
+    resizeMode: 'contain',
+  },
+  videoContainer: {
+    width: '100%',
+    height: height * 0.4,
+    backgroundColor: 'rgba(151, 216, 196, 0.5)',
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    position: 'relative',
+  },
+  videoLabel: {
+    position: 'absolute',
+    bottom: 20,
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: 'rgba(77, 122, 111, 0.7)',
+    textAlign: 'center',
+  },
+  video: {
+    width: '100%',
+    height: '90%',
+    borderRadius: 15,
+  },
+  buttonTouchable: {
+    width: '80%',
+    overflow: 'hidden',
+    borderRadius: 30,
+    marginBottom: 20,
+  },
+  nextButton: {
+    paddingVertical: 15,
+    borderRadius: 30,
+    width: '100%',
+    alignItems: 'center',
+  },
+  nextButtonText: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+
   instructionCard: {
     width: '100%',
     backgroundColor: 'rgba(151, 216, 196, 0.9)',
@@ -461,20 +564,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 24,
     fontWeight: 'bold',
-  },
-  videoContainer: {
-    width: '100%',
-    height: '80%',
-    backgroundColor: 'black',
-    borderRadius: 15,
-    padding: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 20,
-  },
-  video: {
-    width: '100%',
-    height: '80%',
   },
   videoTxt: {
     fontSize: 18,
