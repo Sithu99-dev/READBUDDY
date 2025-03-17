@@ -310,10 +310,16 @@ export default function LetterAnimation({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Speaking Challenge - Level {level}</Text>
-      <View style={styles.instructions}>
-        <Text style={styles.instructionsText}>🎓 Say the word "{word}"!</Text>
+       <View style={styles.levelIndicator}>
+        <Text style={styles.levelText}>{level}</Text>
       </View>
+      <View style={styles.instructions}>
+      <Text style={styles.titleText}>Say the word</Text>
+      <Text style={styles.wordTitle}>{word}</Text>
+      </View>
+      <Text style={styles.status}>
+        {isRecording ? `Recording: ${countdown}s` : status}
+      </Text>
 
       <View style={styles.animationContainer}>
         {imageUrl && (
@@ -342,16 +348,8 @@ export default function LetterAnimation({ navigation, route }) {
         {modelResult === false && (
           <>
 
-        <View style={styles.maincontrols}>
-          <TouchableOpacity
-            style={[styles.speakButton, isRecording && styles.buttonDisabled]}
-            onPress={startRecording}
-            disabled={isRecording}
-          >
-            <Text style={styles.buttonText}>Speak</Text>
-          </TouchableOpacity>
-        </View>
-          
+          <View style={styles.maincontrols}>
+            
             <TouchableOpacity
               style={[styles.button, isAnimating && styles.buttonDisabled]}
               onPress={startAnimation}
@@ -359,6 +357,15 @@ export default function LetterAnimation({ navigation, route }) {
             >
               <Text style={styles.buttonText}>Start Animation</Text>
             </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+              style={[styles.speakButton, isRecording && styles.buttonDisabled]}
+              onPress={startRecording}
+              disabled={isRecording}
+            >
+              <Text style={styles.buttonText}>Speak</Text>
+            </TouchableOpacity>
+        
             <TouchableOpacity
               style={[styles.button, animationStep === 1 && styles.buttonDisabled]}
               onPress={resetAnimation}
@@ -383,20 +390,54 @@ export default function LetterAnimation({ navigation, route }) {
         )}
       </View>
 
-      <Text style={styles.status}>
-        {isRecording ? `Recording: ${countdown}s` : status}
-      </Text>
+      
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+   
+  },
   container: {
     flex: 1,
+    alignItems: 'center',
+    paddingVertical: 80,
+    paddingHorizontal: 15,
+    backgroundColor: 'rgba(81, 179, 235, 0.9)',
+  },
+  titleText: {
+    fontSize: 28,
+    fontWeight: '600',
+    color: '#333',
+  },
+  wordTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#000',
+    marginVertical: 8,
+  },
+  levelIndicator: {
+    position: 'absolute',
+    top: 20,
+    left: '55%',
+    marginLeft: -20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f6f9fc',
-    padding: 20,
+    zIndex: 10,
+    marginTop:10,
+    marginBottom:10,
+  },
+  levelText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   header: {
     fontSize: 30,
@@ -405,17 +446,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   instructions: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(214, 220, 241, 0.6)',
     borderRadius: 10,
     padding: 15,
-    shadowColor: '#000',
+    shadowColor: 'rgba(180, 186, 243, 0.5)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
     marginBottom: 20,
     maxWidth: 500,
+    justifyContent:'center',
     alignItems: 'center',
+    width:'100%',
   },
   instructionsText: {
     fontSize: 16,
@@ -477,8 +520,8 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 12,
     paddingHorizontal: 20,
-    backgroundColor: '#8cb7f5',
-    borderRadius: 8,
+    backgroundColor: '#c2c8c9',
+    borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -488,8 +531,8 @@ const styles = StyleSheet.create({
   speakButton: {
     paddingVertical: 15,
     paddingHorizontal: 20,
-    backgroundColor: '#85fe78',
-    borderRadius: 8,
+    backgroundColor: '#c2c8c9',
+    borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -500,16 +543,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#cccccc',
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 24,
     color: '#12181e',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   status: {
-    backgroundColor: '#e8f4fd',
+    backgroundColor: '#fba49a',
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 40,
     marginTop: 10,
+    marginBottom:30,
     fontWeight: 'bold',
     textAlign: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.7,
+    shadowRadius: 6,
   },
 });
