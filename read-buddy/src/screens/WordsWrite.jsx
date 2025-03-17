@@ -10,7 +10,7 @@ export default function WordWrite({ navigation }) {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.contentContainer}>
           <Text style={styles.title}>Let's{'\n'}Write Words</Text>
-          
+
           <View style={styles.levelsContainer}>
             <TouchableOpacity
               style={[styles.levelButton, styles.level1]}
@@ -18,21 +18,21 @@ export default function WordWrite({ navigation }) {
             >
               <Text style={styles.levelText}>Level 01</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.levelButton, styles.level2]}
               onPress={() => navigation.navigate('Writing Letters', { level: 2 })}
             >
               <Text style={styles.levelText}>Level 02</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.levelButton, styles.level3]}
               onPress={() => navigation.navigate('Writing Letters', { level: 3 })}
             >
               <Text style={styles.levelText}>Level 03</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.levelButton, styles.level4]}
               onPress={() => navigation.navigate('Writing Letters', { level: 4 })}
@@ -82,23 +82,23 @@ const styles = StyleSheet.create({
     borderColor: 'white', // White radius (border)
   },
   level1: {
-    backgroundColor: 'rgba(153, 222, 186, 0.9)', // Light green
+    backgroundColor: 'rgba(153, 222, 186, 0.9)',
     width: '80%',
-    height: 80,
+    height: "80",
     marginTop:70,
   },
   level2: {
-    backgroundColor: 'rgba(244, 214, 176, 0.9)', // Light orange/peach
+    backgroundColor: 'rgba(244, 214, 176, 0.9)',
     width: '90%',
     height: 90,
   },
   level3: {
-    backgroundColor: 'rgba(244, 182, 172, 0.9)', // Pink/salmon
+    backgroundColor: 'rgba(244, 182, 172, 0.9)',
     width: '100%',
     height: 100,
   },
   level4: {
-    backgroundColor: 'rgba(239, 148, 148, 0.9)', // Darker pink/coral
+    backgroundColor: 'rgba(239, 148, 148, 0.9)',
     width: '110%',
     height: 110,
   },
@@ -106,6 +106,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#000',
-    textAlign: 'center', // Center text
-  }
+    textAlign: 'center',
+  },
 });
