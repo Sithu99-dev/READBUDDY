@@ -1,3 +1,5 @@
+
+
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
@@ -26,8 +28,9 @@ import LetterAnimation from './screens/LetterAnimation';
 import GameOverScreen from './components/GameOverScreen';
 import Game from './components/Game';
 import WordWrite from './screens/WordsWrite';
-import OnboardingScreen from './screens/welcomeScreen/OnboardingScreen';
+import TextInputScreen from './screens/TextInputScreen'; // Ensure correct path
 import SplashScreen from './screens/welcomeScreen/SplashScreen';
+import OnboardingScreen from './screens/welcomeScreen/OnboardingScreen';
 
 // Define navigation param lists
 export type RootStackParamList = {
@@ -38,11 +41,13 @@ export type RootStackParamList = {
   Writing: undefined;
   Speech: undefined;
   Focus: undefined;
-  Onboarding: undefined;
   Splash: undefined;
+  Onboarding: undefined;
+
   'Text Reading': undefined;
-  'Scanned Text': undefined;
-  'Text Settings': undefined;
+  'Scanned Text': { scannedText: string; letterSettings?: object };
+  'Text Settings': { scannedText?: string; inputText?: string; letterSettings: object };
+  'Text Input': undefined;
   'Reading Challenge': undefined;
   'Writing Letters': undefined;
   'Writing Numbers': undefined;
@@ -169,20 +174,41 @@ function RegisterScreen({ navigation }: NativeStackScreenProps<RootStackParamLis
 
       if (!usersSnapshot.empty) {
         Alert.alert('Error', 'User name already exists');
-      } else {
-        await firestore()
-          .collection('snake_game_leadersboard')
-          .doc(email)
-          .set({
-            user_name: userName,
-            email,
-            password,
-            age: ageNum,
-            score: 0,
-          });
-        Alert.alert('Success', 'Registered! Please log in.');
-        navigation.navigate('Login');
+        return;
       }
+
+      // Fetch default text settings from rb_text_settings/rbts1
+      const settingsDoc = await firestore()
+        .collection('rb_text_settings')
+        .doc('rbts1')
+        .get();
+
+      if (!settingsDoc.exists) {
+        Alert.alert('Error', 'Default text settings not found in Firestore');
+        return;
+      }
+
+      const defaultTextSettings = settingsDoc.data()?.textSettings;
+      if (!defaultTextSettings) {
+        Alert.alert('Error', 'Settings field missing in rbts1 document');
+        return;
+      }
+
+      await firestore()
+        .collection('snake_game_leadersboard')
+        .doc(email)
+        .set({
+          user_name: userName,
+          email,
+          password,
+          age: ageNum,
+          score: 0,
+          textSettings: defaultTextSettings, // Use fetched settings
+          textScore: "1.0",
+        });
+
+      Alert.alert('Success', 'Registered! Please log in.');
+      navigation.navigate('Login');
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Registration failed');
     }
@@ -258,6 +284,7 @@ function App() {
               <Stack.Screen name="Text Reading" component={ReadingText} />
               <Stack.Screen name="Scanned Text" component={R1Scanned} />
               <Stack.Screen name="Text Settings" component={R2TextSettings} />
+              <Stack.Screen name="Text Input" component={TextInputScreen} />
               <Stack.Screen name="Reading Challenge" component={ReadingChallenge} />
               <Stack.Screen name="Writing Letters" component={WLevel1} />
               <Stack.Screen name="Writing Numbers" component={WLevel2} />
@@ -274,11 +301,10 @@ function App() {
             </React.Fragment>
           ) : (
             <React.Fragment>
-              <Stack.Screen name="Splash" component={SplashScreen} />
-              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+                <Stack.Screen name="Splash" component={SplashScreen} />
+                <Stack.Screen name="Onboarding" component={OnboardingScreen} />
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
-
             </React.Fragment>
           )}
         </Stack.Navigator>
