@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  SafeAreaView,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -99,7 +98,7 @@ function RegisterScreen({ navigation }: RegisterScreenProps) {
          <View style={styles.headerContainer}>
             <View style={styles.divider} />
           </View>
-        <Text style={styles.title}>Your account Register</Text>
+        <Text style={styles.title}>Sign Up your account</Text>
         
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -107,10 +106,11 @@ function RegisterScreen({ navigation }: RegisterScreenProps) {
         >
           <ScrollView contentContainerStyle={styles.scrollContainer}>
             <View style={styles.formContainer}>
-              <Text style={styles.label}>name</Text>
+              <Text style={styles.label}>Username</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Enter your name"
+                placeholderTextColor="#8c8c8c"
                 value={userName}
                 onChangeText={setUserName}
                 autoCapitalize="none"
@@ -120,6 +120,7 @@ function RegisterScreen({ navigation }: RegisterScreenProps) {
               <TextInput
                 style={styles.input}
                 placeholder="Enter your email"
+                placeholderTextColor="#8c8c8c"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -130,6 +131,7 @@ function RegisterScreen({ navigation }: RegisterScreenProps) {
               <TextInput
                 style={styles.input}
                 placeholder="Enter your password"
+                placeholderTextColor="#8c8c8c"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -139,6 +141,7 @@ function RegisterScreen({ navigation }: RegisterScreenProps) {
               <TextInput
                 style={styles.input}
                 placeholder="Enter your age"
+                placeholderTextColor="#8c8c8c"
                 value={age}
                 onChangeText={setAge}
                 keyboardType="numeric"
@@ -156,9 +159,9 @@ function RegisterScreen({ navigation }: RegisterScreenProps) {
               </TouchableOpacity>
               
               <View style={styles.loginContainer}>
-                <Text style={styles.loginText}>Don't have and account? </Text>
+                <Text style={styles.loginText}>Already have an account? </Text>
                 <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                  <Text style={styles.loginLink}>Sign up</Text>
+                  <Text style={styles.loginLink}>Sign In</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -230,6 +233,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 20,
     fontSize: 16,
+    color :'#000',
   },
   registerButton: {
     borderRadius: 30,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -60,7 +60,7 @@ export default function LetterAnimation({ navigation, route }) {
   useEffect(() => {
     resetForNewWord(0);
     loadImage(0);
-  }, [level]);
+  }, [level, loadImage]);
 
   const selectedWord = levelWords[currentWordIndex] || levelWords[0];
   const letterGroups = selectedWord.letterGroups;
@@ -77,9 +77,9 @@ export default function LetterAnimation({ navigation, route }) {
     letterAnimations.forEach((anim) => {
       anim.setValue({ x: 0, y: -100 });
     });
-  }, [currentWordIndex]);
+  }, [currentWordIndex, letterAnimations]);
 
-  const loadImage = async (index) => {
+  const loadImage = useCallback(async (index) => {
     try {
       const imageRef = storage().ref(levelWords[index].image);
       const url = await imageRef.getDownloadURL();
@@ -88,7 +88,7 @@ export default function LetterAnimation({ navigation, route }) {
       console.error('Error loading image:', error);
       setImageUrl(null);
     }
-  };
+  }, [levelWords]);
 
   const resetForNewWord = (index) => {
     setCurrentWordIndex(index);

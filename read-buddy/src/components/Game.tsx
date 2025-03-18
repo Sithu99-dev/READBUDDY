@@ -323,35 +323,53 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
       const averageSpeed = timeToReachFruit.length > 0
         ? timeToReachFruit.reduce((a, b) => a + b, 0) / timeToReachFruit.length
         : 0;
-
+  
       console.log(`Level: ${level}, Average Speed: ${averageSpeed}, Score: ${score}`);
-
+  
+      // Find matching result based on level and average speed range
       let result;
-      if (averageSpeed === 0) {
+      
+      if (timeToReachFruit.length === 0) {
+        // If player didn't eat any food, find a "Low" result for their level
         result = gameResults.find(record =>
           record.level === level && record.result.includes('Low')
         );
       } else {
+        // Find result where level matches and speed is within range
         result = gameResults.find(record =>
           record.level === level &&
           averageSpeed >= record.rangemin &&
           averageSpeed <= record.rangemax
         );
+        
+        // If no matching range found, find closest one
+        if (!result) {
+          const levelResults = gameResults.filter(record => record.level === level);
+          
+          if (levelResults.length > 0) {
+            // Default to "Medium" if we can't determine the exact match
+            result = levelResults.find(record => record.result.includes('Medium'));
+            
+            // Log warning about unmatched range
+            console.warn(`No exact range match found for level ${level} with speed ${averageSpeed}`);
+          }
+        }
       }
-
+  
       const gameResult = result || {
-        result: 'Unknown',
-        description: 'No matching performance range found.',
-        topic1: '', topic2: '', topic3: '', topic4: '', topic5: '', topic6: '', topic7: '',
-        message1: '', message2: '', message3: '', message4: '', message5: '', message6: '', message7: '',
+        result: "Unknown",
+        description: "No matching performance range found.",
+        topic1: "", topic2: "", topic3: "", topic4: "", topic5: "", topic6: "", topic7: "",
+        message1: "", message2: "", message3: "", message4: "", message5: "", message6: "", message7: "",
       };
+      
       setGameOverResult(gameResult);
-
+  
       if (!navigation) {
         console.error('Navigation prop is undefined in Game component');
         return;
       }
-
+  
       Alert.alert(
         'Game Over',
         `Your Score: ${score}`,
@@ -363,11 +381,11 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
         ],
         { cancelable: false }
       );
-
+  
       updateHighScore(score);
     }
   }, [isGameOver, score, navigation]);
-
+  
   if (!isLevelSelected) {
     return (
       <ImageBackground 

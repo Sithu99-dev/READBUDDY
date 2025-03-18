@@ -20,21 +20,27 @@ type OnboardingScreenProps = NativeStackScreenProps<RootStackParamList, 'Onboard
 const onboardingData = [
   {
     id: '1',
-    title: 'The Real Estate Investment Community Is At Your Fingertips',
-    description: 'We Are The Link Between The Property Offerer And Its Beneficiaries On A Large Scale',
-    image: require('../../assets/bg2.jpg'),
+    title: 'Readability Checker',
+    description: 'Scan or input text and adjust font, spacing, and color to improve readability. Save your preferred settings for future use!',
+    image: require('../../assets/read.png'),
   },
   {
     id: '2',
-    title: 'Turn Your Home Into A Money Box Effortlessly',
-    description: 'Renting Out A Home Can Be A Smart Financial Investment To Achieve Stable Returns.',
-    image: require('../../assets/bg2.jpg'),
+    title: 'Writing Coach',
+    description: 'Practice writing letters and numbers with guided exercises. Get instant feedback and improve your writing skills!',
+    image: require('../../assets/write.png'),
   },
   {
     id: '3',
-    title: 'Find A House To Rent Easily',
-    description: 'Through The Many Search Filters Provided By Minting SPACES, Find A House That Suits You Effortlessly While Guaranteeing The Rights Of Both Parties To Conclude The Lease Contract',
-    image: require('../../assets/bg2.jpg'),
+    title: 'Pronunciation Assist',
+    description: 'dentify words, practice pronunciation, and receive feedback. Learn with interactive exercises and guided support!',
+    image: require('../../assets/pronuncing.png'),
+  },
+  {
+    id: '4',
+    title: 'Focus Challenge',
+    description: 'Engage in fun activities to boost concentration and quick decision-making. Strengthen cognitive skills through structured exercises!',
+    image: require('../../assets/game.png'),
   },
 ];
 

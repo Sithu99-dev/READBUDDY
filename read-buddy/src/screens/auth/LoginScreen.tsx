@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  SafeAreaView,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -74,12 +73,13 @@ function LoginScreen({ navigation }: LoginScreenProps) {
                 style={styles.keyboardView}
               >
                 <ScrollView contentContainerStyle={styles.scrollContainer}>
-                  <Text style={styles.formTitle}>Enter to your account</Text>
+                  <Text style={styles.formTitle}>Login to your account</Text>
 
                   <Text style={styles.label}>Username</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="Enter your username"
+                    placeholderTextColor="#8c8c8c"
                     value={userName}
                     onChangeText={setUserName}
                     autoCapitalize="none"
@@ -89,6 +89,7 @@ function LoginScreen({ navigation }: LoginScreenProps) {
                   <TextInput
                     style={styles.input}
                     placeholder="Enter your password"
+                    placeholderTextColor="#8c8c8c"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
@@ -192,6 +193,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 10,
     fontSize: 16,
+    color:'#000',
   },
   loginButton: {
     backgroundColor: '#3498db',

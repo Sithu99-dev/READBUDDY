@@ -9,13 +9,15 @@ import {
   Image,
   SafeAreaView,
   TouchableWithoutFeedback,
+  ScrollView,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { AppContext } from '../../App';
 import LinearGradient from 'react-native-linear-gradient';
+// Using a simple Text component for icons instead of external library
 
 const { width } = Dimensions.get('window');
-const DRAWER_WIDTH = width * 0.7;
+const DRAWER_WIDTH = width * 0.75;
 
 interface ProfileDrawerProps {
   isVisible: boolean;
@@ -31,7 +33,7 @@ const ProfileDrawer = ({ isVisible, onClose, navigation }: ProfileDrawerProps) =
   // Fetch user data from Firestore
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!loggedInUser) {return;}
+      if (!loggedInUser) return;
 
       try {
         const userDoc = await firestore()
@@ -86,13 +88,20 @@ const ProfileDrawer = ({ isVisible, onClose, navigation }: ProfileDrawerProps) =
         >
           <TouchableWithoutFeedback>
             <SafeAreaView style={styles.drawerContent}>
-              {/* Profile header with gradient background */}
+              <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Profile header with gentle gradient background */}
               <LinearGradient
-                colors={['#03cdc0', '#7e34de']}
+                colors={['#4a9dff', '#7c64ff']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.profileHeader}
               >
+                <View style={styles.closeButton}>
+                  <TouchableOpacity onPress={onClose}>
+                    <Text style={styles.iconText}>←</Text>
+                  </TouchableOpacity>
+                </View>
+                
                 <View style={styles.avatarContainer}>
                   <Text style={styles.avatarText}>
                     {userData.user_name ? userData.user_name.charAt(0).toUpperCase() : 'U'}
@@ -104,24 +113,28 @@ const ProfileDrawer = ({ isVisible, onClose, navigation }: ProfileDrawerProps) =
 
               {/* User Information Section */}
               <View style={styles.infoSection}>
-                <Text style={styles.sectionTitle}>Profile Information</Text>
+                <Text style={styles.sectionTitle}>My Profile</Text>
 
                 <View style={styles.infoItem}>
+                  <Text style={styles.itemIcon}>👤</Text>
                   <Text style={styles.infoLabel}>Username:</Text>
                   <Text style={styles.infoValue}>{userData.user_name || 'N/A'}</Text>
                 </View>
 
                 <View style={styles.infoItem}>
+                  <Text style={styles.itemIcon}>✉️</Text>
                   <Text style={styles.infoLabel}>Email:</Text>
                   <Text style={styles.infoValue}>{userData.email || 'N/A'}</Text>
                 </View>
 
                 <View style={styles.infoItem}>
+                  <Text style={styles.itemIcon}>🎂</Text>
                   <Text style={styles.infoLabel}>Age:</Text>
                   <Text style={styles.infoValue}>{userData.age || 'N/A'}</Text>
                 </View>
 
                 <View style={styles.infoItem}>
+                  <Text style={styles.itemIcon}>🏆</Text>
                   <Text style={styles.infoLabel}>Score:</Text>
                   <Text style={styles.infoValue}>{userData.score || '0'}</Text>
                 </View>
@@ -129,12 +142,13 @@ const ProfileDrawer = ({ isVisible, onClose, navigation }: ProfileDrawerProps) =
 
               {/* Navigation Section */}
               <View style={styles.navigationSection}>
-                <Text style={styles.sectionTitle}>Navigation</Text>
+                <Text style={styles.sectionTitle}>Where to Go</Text>
 
                 <TouchableOpacity
                   style={styles.navItem}
                   onPress={() => handleNavigate('Home')}
                 >
+                  <Text style={styles.navIcon}>🏠</Text>
                   <Text style={styles.navText}>Home</Text>
                 </TouchableOpacity>
 
@@ -142,6 +156,7 @@ const ProfileDrawer = ({ isVisible, onClose, navigation }: ProfileDrawerProps) =
                   style={styles.navItem}
                   onPress={() => handleNavigate('Reading')}
                 >
+                  <Text style={styles.navIcon}>📚</Text>
                   <Text style={styles.navText}>Reading</Text>
                 </TouchableOpacity>
 
@@ -149,6 +164,7 @@ const ProfileDrawer = ({ isVisible, onClose, navigation }: ProfileDrawerProps) =
                   style={styles.navItem}
                   onPress={() => handleNavigate('Writing')}
                 >
+                  <Text style={styles.navIcon}>✏️</Text>
                   <Text style={styles.navText}>Writing</Text>
                 </TouchableOpacity>
 
@@ -156,6 +172,7 @@ const ProfileDrawer = ({ isVisible, onClose, navigation }: ProfileDrawerProps) =
                   style={styles.navItem}
                   onPress={() => handleNavigate('Speech')}
                 >
+                  <Text style={styles.navIcon}>🎤</Text>
                   <Text style={styles.navText}>Speech</Text>
                 </TouchableOpacity>
 
@@ -163,6 +180,7 @@ const ProfileDrawer = ({ isVisible, onClose, navigation }: ProfileDrawerProps) =
                   style={styles.navItem}
                   onPress={() => handleNavigate('Focus')}
                 >
+                  <Text style={styles.navIcon}>👁️</Text>
                   <Text style={styles.navText}>Focus</Text>
                 </TouchableOpacity>
               </View>
@@ -172,8 +190,10 @@ const ProfileDrawer = ({ isVisible, onClose, navigation }: ProfileDrawerProps) =
                 style={styles.logoutButton}
                 onPress={handleLogout}
               >
+                <Text style={styles.logoutIcon}>🚪</Text>
                 <Text style={styles.logoutText}>Logout</Text>
               </TouchableOpacity>
+              </ScrollView>
             </SafeAreaView>
           </TouchableWithoutFeedback>
         </Animated.View>
@@ -189,7 +209,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     zIndex: 999,
   },
   drawer: {
@@ -198,17 +218,41 @@ const styles = StyleSheet.create({
     left: 0,
     width: DRAWER_WIDTH,
     height: '100%',
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
     zIndex: 1000,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 2,
+      height: 0,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    padding: 5,
+  },
+  iconText: {
+    fontSize: 32,
+    color: 'white',
+    fontWeight: 'bold',
   },
   drawerContent: {
     flex: 1,
+    paddingBottom: 20,
   },
   profileHeader: {
     padding: 20,
     alignItems: 'center',
-    paddingTop: 40,
+    paddingTop: 50,
     paddingBottom: 30,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   avatarContainer: {
     width: 80,
@@ -218,75 +262,116 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
   },
   avatarText: {
     fontSize: 36,
     fontWeight: 'bold',
     color: 'white',
+    fontFamily: 'OpenDyslexic-Bold',
   },
   userName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 5,
+    fontFamily: 'OpenDyslexic-Bold',
   },
   userEmail: {
-    fontSize: 14,
+    fontSize: 16,
     color: 'white',
-    opacity: 0.8,
+    opacity: 0.9,
+    fontFamily: 'OpenDyslexic-Regular',
   },
   infoSection: {
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#f9f9f9',
+    margin: 10,
+    borderRadius: 15,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 15,
     color: '#333',
+    fontFamily: 'OpenDyslexic-Bold',
+    borderBottomWidth: 2,
+    borderBottomColor: '#4a9dff',
+    paddingBottom: 5,
   },
   infoItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 5,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#e0e0e0',
+  },
+  itemIcon: {
+    marginRight: 10,
+    fontSize: 24,
+    color: "#4a9dff",
   },
   infoLabel: {
     fontSize: 16,
     color: '#555',
+    fontFamily: 'OpenDyslexic-Regular',
+    width: 100,
   },
   infoValue: {
     fontSize: 16,
     color: '#333',
     fontWeight: '500',
+    fontFamily: 'OpenDyslexic-Regular',
+    flex: 1,
   },
   navigationSection: {
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    margin: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 15,
   },
   navItem: {
-    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 5,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#e0e0e0',
+  },
+  navIcon: {
+    marginRight: 15,
+    fontSize: 28,
+    color: "#4a9dff",
   },
   navText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#333',
+    fontFamily: 'OpenDyslexic-Regular',
   },
   logoutButton: {
     margin: 20,
+    marginBottom: 30,
     padding: 15,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e74c3c',
+  },
+  logoutIcon: {
+    marginRight: 10,
+    fontSize: 24,
+    color: "#e74c3c",
   },
   logoutText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#e74c3c',
+    fontFamily: 'OpenDyslexic-Bold',
   },
 });
 
