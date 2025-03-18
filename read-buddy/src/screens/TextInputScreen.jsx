@@ -52,29 +52,36 @@ export default function TextInputScreen({ navigation, route }) {
   const renderLine = (line) => {
     const words = line.split(' ');
     return words.map((word, wordIndex) => (
-      <Text key={wordIndex} style={styles.word}>
-        {word.split('').map((char, charIndex) => {
-          const settings = letterSettings[char] || {
-            fontSize: 16,
-            color: 'black',
-            bold: false,
-          };
-          return (
-            <Text
-              key={charIndex}
-              style={{
-                fontFamily: 'OpenDyslexic3-Regular',
-                fontSize: settings.fontSize + 14,
-                color: settings.color,
-                fontWeight: settings.bold ? 'bold' : 'normal',
-              }}
-            >
-              {char}
-            </Text>
-          );
-        })}
-        {wordIndex < words.length - 1 && <Text> </Text>}
-      </Text>
+      <React.Fragment key={wordIndex}>
+        <Text style={styles.word}>
+          {word.split('').map((char, charIndex) => {
+            const settings = letterSettings[char] || {
+              fontSize: 16,
+              color: 'black',
+              bold: false,
+            };
+            return (
+              <Text
+                key={charIndex}
+                style={{
+                  fontFamily: 'OpenDyslexic3-Regular',
+                  fontSize: settings.fontSize + 14,
+                  color: settings.color,
+                  fontWeight: settings.bold ? 'bold' : 'normal',
+                }}
+              >
+                {char}
+              </Text>
+            );
+          })}
+        </Text>
+        {wordIndex < words.length - 1 && (
+          <Text>
+            {/* Convert 1 space to 4 spaces */}
+            &nbsp;&nbsp;&nbsp;&nbsp;
+          </Text>
+        )}
+      </React.Fragment>
     ));
   };
 

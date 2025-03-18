@@ -65,7 +65,7 @@ export default function R1Scanned({ navigation, route }) {
             </Text>
           );
         })}
-        {wordIndex < words.length - 1 && <Text> </Text>}
+        {wordIndex < words.length - 1 && <Text>    </Text>}
       </Text>
     ));
   };

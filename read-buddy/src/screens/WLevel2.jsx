@@ -18,20 +18,28 @@ import Tts from 'react-native-tts';
 import Video from 'react-native-video';
 import numbersData from '../data/numbers.json';
 import { myurl } from '../data/url';
+import { useNavigation } from '@react-navigation/native';
 
 export default function WLevel2({ navigation }) {
   const signatureRef = useRef(null);
 
   const [modelResul, setModelResul] = useState(false);
-  const [currentNum, setCurrentNum] = useState(null);
+  const [currentNum, setCurrentNum] = useState(numbersData[0]);
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showGrid, setShowGrid] = useState(true); // Grid visibility state
+  const [showGrid, setShowGrid] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [successScreen, setSuccessScreen] = useState(false);
+  const nav = useNavigation();
+
+  const goBack = () => {
+    nav.goBack();
+  };
 
   const playAudio = () => {
     try {
-      const randomIndex = Math.floor(Math.random() * numbersData.length);
-      const selectedNum = numbersData[randomIndex];
+      console.log(currentIndex)
+      const selectedNum = numbersData[currentIndex];
       setCurrentNum(selectedNum);
 
       Tts.setDefaultLanguage('en-US');
@@ -64,27 +72,35 @@ export default function WLevel2({ navigation }) {
     }
   };
 
-  const click = () => {
-    console.log(currentNum.number)
+  const click = async () =>{
+    console.log('==================================');
+    console.log(currentNum.number);
     const fetchData = async () => {
+      // setIsLoading(true);
       try {
-        const response = await fetch(myurl+'/numbers', {
+        console.log(`Calling ${myurl}/numbers`);
+        const response = await fetch(myurl + '/numbers', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ number: currentNum.number }),          
+          body: JSON.stringify({ number: currentNum.number }),
         });
 
         const data = await response.json();
-        setModelResul(data["res"]);
+        console.log(`Model result ${JSON.stringify(data)}`);
+        setModelResul(data.res);
+        return data.res;
       } catch (error) {
         console.error('Error:', error);
+        throw new Error(`${error}`);
+      } finally {
+        // setIsLoading(false);r
       }
     };
 
-    fetchData();
-  }
+    return await fetchData();
+  };
 
   const uploadSignature = async (base64Data) => {
     try {
@@ -104,21 +120,31 @@ export default function WLevel2({ navigation }) {
       console.log('Upload complete');
 
       clearCanvas();
-      click();
+      let res = await click();
+      console.log(`Model result ${res}`);
 
-      if (modelResul === false && currentNum) {
+      if (res === false && currentNum) {
         const videoRef = storage().ref(currentNum.answer);
         const url = await videoRef.getDownloadURL();
         console.log('Video URL fetched:', url);
         setVideoUrl(url);
         setLoading(false);
-      } else if (modelResul === true) {
+      } else if (res === true) {
         Alert.alert('Success', 'Your Answer is correct');
         setLoading(false);
+        if(currentIndex < 9) {
+          var index = currentIndex + 1;
+          console.log(`Current index ${index}`);
+          setCurrentIndex(index);
+        }else {
+          setCurrentIndex(0);
+          setSuccessScreen(true);
+        }
+
         // playAudio();
       }
     } catch (error) {
-      console.error('Error uploading signature:', error);
+      console.error('Error : ', error);
       Alert.alert('Error', 'Failed to upload signature');
       setLoading(false);
     }
@@ -155,6 +181,18 @@ export default function WLevel2({ navigation }) {
     return baseStyle + gridStyle;
   };
 
+  if(successScreen) {
+    return (
+      <View style={styles.container}>
+         <View>
+          <Text style={styles.insTxt}>All the Numbers Completed</Text>
+          <TouchableOpacity onPress={goBack} disabled={loading}>
+            <Text style={styles.negativeBtn}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
   return (
     <ImageBackground source={require('../assets/sp.png')} style={styles.background} imageStyle={{opacity: 0.3}}>
       <SafeAreaView style={styles.container}>
@@ -193,7 +231,7 @@ export default function WLevel2({ navigation }) {
                   onPress={toggleGrid}
                 >
                   <Text style={styles.gridToggleText}>
-                    {showGrid ? "Hide Grid" : "Show Grid"}
+                    {showGrid ? 'Hide Grid' : 'Show Grid'}
                   </Text>
                 </TouchableOpacity>
 
@@ -212,7 +250,7 @@ export default function WLevel2({ navigation }) {
                     onPress={submitCanvas}
                     disabled={loading}
                   >
-                    <Text style={styles.actionButtonText}>SUBMIT</Text>
+                    <Text style={styles.actionButtonText}>NEXT</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -226,14 +264,14 @@ export default function WLevel2({ navigation }) {
               <Text style={styles.feedbackText}>
                 Nice Try! Here is the correct answer
               </Text>
-              <Image 
+              <Image
                 source={require('../assets/mascot.png')}
                 style={styles.mascotImage}
               />
             </View>
-            
+
             <View style={styles.videoContainer}>
-              <Text style={styles.videoLabel}>video</Text>
+
               <Video
                 source={{ uri: videoUrl }}
                 style={styles.video}
@@ -251,9 +289,9 @@ export default function WLevel2({ navigation }) {
                 }}
               />
             </View>
-            
-            <TouchableOpacity 
-              onPress={() => setVideoUrl(null)} 
+
+            <TouchableOpacity
+              onPress={() => setVideoUrl(null)}
               style={styles.buttonTouchable}
             >
               <LinearGradient
