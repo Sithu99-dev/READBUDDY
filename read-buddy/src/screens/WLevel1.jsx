@@ -343,60 +343,61 @@ export default function WLevel1({ navigation, route }) {
         )}
 
         {videoUrl && (
-  <View style={styles.mainContainer}>
-  <View style={styles.feedbackContainer}>
-    <Text style={styles.feedbackText}>
-      Nice try! You're doing great!{'\n'}
-      Let's work on writing the{'\n'}
-      correct letter.
-    </Text>
-    <Image 
-      source={require('../assets/mascot.png')} // Replace with your actual mascot image
-      style={styles.mascotImage}
-    />
-  </View>
-  
-  <View style={styles.videoContainer}>
-    <Text style={styles.videoLabel}>video</Text>
-    <Video
-      source={{ uri: videoUrl }}
-      style={styles.video}
-      controls={true}
-      resizeMode="contain"
-      onLoad={() => console.log('Video loaded')}
-      onError={(e) => {
-        console.log('Video error:', e.error);
-        Alert.alert('Error', 'Failed to play video');
-        nextVideo();
-      }}
-    />
-  </View>
-  
-  <TouchableOpacity 
-    onPress={nextVideo} 
-    style={styles.buttonTouchable}
-  >
-    <LinearGradient
-      style={styles.nextButton}
-      colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 0}}
-    >
-      <Text style={styles.nextButtonText}>NEXT</Text>
-    </LinearGradient>
-  </TouchableOpacity>
-</View>
-)}
+          <View style={styles.mainContainer}>
+            <View style={styles.feedbackContainer}>
+              <Text style={styles.feedbackText}>
+                Nice try! You're doing great!{'\n'}
+                Let's work on writing the{'\n'}
+                correct letter.
+              </Text>
+              <ImageBackground 
+                source={require('../assets/mascot.png')}
+                style={styles.mascotImage}
+                imageStyle={styles.mascotImageStyle}
+                backgroundColor="rgba(151, 216, 196, 0.8)"
+              />
+            </View>
+            
+            <View style={styles.videoContainer}>
+              <Video
+                source={{ uri: videoUrl }}
+                style={styles.video}
+                controls={true}
+                resizeMode="contain"
+                onLoad={() => console.log('Video loaded')}
+                onError={(e) => {
+                  console.log('Video error:', e.error);
+                  Alert.alert('Error', 'Failed to play video');
+                  nextVideo();
+                }}
+              />
+            </View>
+            
+            <TouchableOpacity 
+              onPress={nextVideo} 
+              style={styles.buttonTouchable}
+            >
+              <LinearGradient
+                style={styles.nextButton}
+                colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+              >
+                <Text style={styles.nextButtonText}>NEXT</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
 
-{loading && (
-<View style={styles.loadingOverlay}>
-  <ActivityIndicator size="large" color="#4e9ede" />
-  <Text style={styles.loadingText}>Uploading...</Text>
-</View>
-)}
-</SafeAreaView>
-</ImageBackground>
-);
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#4e9ede" />
+            <Text style={styles.loadingText}>Uploading...</Text>
+          </View>
+        )}
+      </SafeAreaView>
+    </ImageBackground>
+  );
 }
 
 const { width, height } = Dimensions.get('window');
@@ -443,6 +444,9 @@ const styles = StyleSheet.create({
   mascotImage: {
     width: 100,
     height: 180,
+    backgroundColor: 'rgba(151, 216, 196, 0.8)', // Same background as feedbackContainer
+  },
+  mascotImageStyle: {
     resizeMode: 'contain',
   },
   videoContainer: {
