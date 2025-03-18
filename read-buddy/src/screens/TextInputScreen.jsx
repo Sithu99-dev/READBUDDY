@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Image,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { AppContext } from '../App.tsx';
@@ -86,84 +89,124 @@ export default function TextInputScreen({ navigation, route }) {
   };
 
   return (
-    <View style={styles.outerContainer}>
-      {/* Fixed Heading */}
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>Write your text here</Text>
-      </View>
-
-      {/* Scrollable Input and Rendered Text */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-      >
-        <TextInput
-          style={styles.textInput}
-          multiline
-          placeholder="Type your text here..."
-          value={inputText}
-          onChangeText={setInputText}
-        />
-        {inputText ? (
-          <View style={styles.textWrapper}>{renderLines(inputText)}</View>
-        ) : null}
-      </ScrollView>
-
-      {/* Fixed Text Settings Button */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate('Text Settings', { inputText, letterSettings })
-          }
+    <SafeAreaView style={styles.container}>
+      <StatusBar backgroundColor="#5FC3C0" barStyle="dark-content" />
+      
+      {/* Header with back button and settings */}
+      <View style={styles.header}>
+        
+        <TouchableOpacity 
+          style={styles.settingsButton}
+          onPress={() => navigation.navigate('Text Settings', { inputText, letterSettings })}
         >
-          <Text style={styles.positiveBtn}>Text Settings</Text>
+          <Image 
+            source={require('../assets/settings.png')} 
+            style={styles.settingsIcon}
+            // Fallback if image isn't available
+            // Use this with the fallback text below
+          />
+          {/* <Text style={styles.settingsText}>⚙️</Text> */}
         </TouchableOpacity>
       </View>
-    </View>
+
+      {/* Main title */}
+      <Text style={styles.title}>
+        Enter the text you want to change
+      </Text>
+
+      {/* Input field */}
+      <TextInput
+        style={styles.textInput}
+        placeholder="Input Value"
+        placeholderTextColor="#AAAAAA"
+        value={inputText}
+        onChangeText={setInputText}
+        multiline={false}
+      />
+
+      {/* Preview area for the formatted text */}
+      <View style={styles.previewContainer}>
+        <ScrollView contentContainerStyle={styles.previewContent}>
+          {inputText ? (
+            <View style={styles.textWrapper}>{renderLines(inputText)}</View>
+          ) : null}
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  outerContainer: {
+  container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#5FC3C0', // Teal background from image
   },
-  headerContainer: {
-    position: 'absolute',
-    top: 20,
-    left: 0,
-    right: 0,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    zIndex: 1,
-    padding: 10,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    marginBottom: 10,
   },
-  headerText: {
+  backButton: {
+    padding: 8,
+  },
+  backButtonText: {
+    fontSize: 52,
+    color: '#000',
+    fontWeight: 'bold',
+  },
+  settingsIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#000',
+    fontWeight:'bold',
+
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(128, 128, 128, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft:160,
+    marginTop:-72,
+    marginBottom:4,
+  },
+  settingsText: {
+    fontSize: 20,
+    color: 'white',
+  },
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2c3e50',
-  },
-  scrollView: {
-    flex: 1,
-    width: '100%',
-    marginTop: 70,
-    marginBottom: 60,
-  },
-  contentContainer: {
-    padding: 10,
-    paddingBottom: 20,
+    color: '#000',
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
   textInput: {
-    width: '100%',
-    minHeight: 100,
-    maxHeight: 200,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    height: 50,
+    backgroundColor: '#FFF',
     borderRadius: 10,
-    padding: 10,
-    fontSize: 18,
+    marginHorizontal: 20,
+    marginBottom: 15,
+    paddingHorizontal: 15,
+    fontSize: 16,
     color: '#000',
-    textAlignVertical: 'top',
+  },
+  previewContainer: {
+    flex: 1,
+    backgroundColor: '#FFF',
+    borderRadius: 25,
+    marginHorizontal: 20,
     marginBottom: 20,
+    overflow: 'hidden',
+  },
+  previewContent: {
+    padding: 15,
+    flexGrow: 1,
   },
   textWrapper: {
     alignItems: 'center',
@@ -175,23 +218,5 @@ const styles = StyleSheet.create({
   },
   word: {
     flexShrink: 0,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 1,
-    padding: 10,
-  },
-  positiveBtn: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#12181e',
-    padding: 10,
-    margin: 5,
-    backgroundColor: '#85fe78',
-    borderRadius: 10,
   },
 });
