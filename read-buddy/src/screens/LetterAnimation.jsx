@@ -17,6 +17,8 @@ import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import Sound from 'react-native-sound';
 import storage from '@react-native-firebase/storage';
 import { myurl } from '../data/url';
+import IncorrectPronunciationPopup from './voice/IncorrectPronunciationPopup';
+
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
 
@@ -31,6 +33,7 @@ export default function LetterAnimation({ navigation, route }) {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [wordResults, setWordResults] = useState([]);
   const [imageUrl, setImageUrl] = useState(null);
+  const [showIncorrectPopup, setShowIncorrectPopup] = useState(false);
 
   const click = async () => {
     try {
@@ -98,6 +101,7 @@ export default function LetterAnimation({ navigation, route }) {
     setModelResult(null);
     setStatus('Say the word you see!');
     setCountdown(5);
+    setShowIncorrectPopup(false);
   };
 
   const startAnimation = async () => {
@@ -105,6 +109,9 @@ export default function LetterAnimation({ navigation, route }) {
     setIsAnimating(true);
     setStatus(`Animating "${word}" and playing audio...`);
     setAnimationStep(2);
+    
+    // Close popup if it's open
+    setShowIncorrectPopup(false);
 
     // Play the correct audio when animation starts
     await playCorrectAudio();
@@ -134,7 +141,7 @@ export default function LetterAnimation({ navigation, route }) {
   };
 
   const requestMicPermission = async () => {
-    if (Platform.OS === 'android') { // Fixed typo here
+    if (Platform.OS === 'android') {
       try {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
@@ -220,8 +227,8 @@ export default function LetterAnimation({ navigation, route }) {
         setStatus('Click Next to continue');
       } else {
         setStatus('Listen to the correct pronunciation');
-        // playCorrectAudio();
-        // startAnimation();
+        // Show the incorrect pronunciation popup
+        setShowIncorrectPopup(true);
       }
     } catch (error) {
       console.error('Stop recording/upload error:', error);
@@ -314,12 +321,12 @@ export default function LetterAnimation({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-       <View style={styles.levelIndicator}>
+      <View style={styles.levelIndicator}>
         <Text style={styles.levelText}>{level}</Text>
       </View>
       <View style={styles.instructions}>
-      <Text style={styles.titleText}>Say the word</Text>
-      <Text style={styles.wordTitle}>{word}</Text>
+        <Text style={styles.titleText}>Say the word</Text>
+        <Text style={styles.wordTitle}>{word}</Text>
       </View>
       <Text style={styles.status}>
         {isRecording ? `Recording: ${countdown}s` : status}
@@ -341,7 +348,7 @@ export default function LetterAnimation({ navigation, route }) {
             onPress={startRecording}
             disabled={isRecording}
           >
-              <Image 
+            <Image 
               source={require('../assets/voice.png')} 
               style={styles.microphoneIcon} 
             />
@@ -434,6 +441,13 @@ export default function LetterAnimation({ navigation, route }) {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Incorrect Pronunciation Popup */}
+      <IncorrectPronunciationPopup
+        visible={showIncorrectPopup}
+        onClose={() => setShowIncorrectPopup(false)}
+        onStartAnimation={startAnimation}
+      />
     </View>
   );
 }
