@@ -16,6 +16,7 @@ import {
 import Slider from '@react-native-community/slider';
 import firestore from '@react-native-firebase/firestore';
 import { AppContext } from '../App.tsx';
+import LinearGradient from 'react-native-linear-gradient'; // Import LinearGradient
 
 export default function R2TextSettings({ navigation, route }) {
   const { scannedText, inputText, letterSettings: initialSettings } = route.params || {};
@@ -75,7 +76,7 @@ export default function R2TextSettings({ navigation, route }) {
   };
 
   const renderLetterPreview = () => {
-    return 'AbC DeFgH IJK kLmn oPqrS QvwXyz'.split('').map((char, index) => {
+    return 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((char, index) => {
       const settings =
         letterSettings[char] || {
           fontSize: 18,
@@ -137,12 +138,6 @@ export default function R2TextSettings({ navigation, route }) {
         </View>
       </View>
       
-      <View style={styles.previewContainer}>
-        <View style={styles.previewText}>
-          {renderLetterPreview('THE QUICK BROWN FOX JUMPS OVER A LAZY DOG.')}
-        </View>
-      </View>
-      
       {/* Search bar */}
       <View style={styles.searchContainer}>
         <TextInput
@@ -164,7 +159,7 @@ export default function R2TextSettings({ navigation, route }) {
             
             <View style={styles.settingsCard}>
               <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>Font Size (12 - 24)</Text>
+                <Text style={styles.settingLabel}>Font Size (18 - 34)</Text>
                 <Slider
                   minimumValue={12}
                   maximumValue={24}
@@ -233,9 +228,16 @@ export default function R2TextSettings({ navigation, route }) {
         </View>
       </Modal>
       
-      {/* Apply button - shown when needed */}
-      <TouchableOpacity style={styles.applyButton} onPress={saveSettingsToFirestore}>
-        <Text style={styles.applyButtonText}>Apply Settings</Text>
+      {/* Apply button with LinearGradient */}
+      <TouchableOpacity onPress={saveSettingsToFirestore}>
+        <LinearGradient
+          style={styles.applyButton}
+          colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+        >
+          <Text style={styles.applyButtonText}>Apply Settings</Text>
+        </LinearGradient>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -372,7 +374,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   applyButton: {
-    backgroundColor: '#85fe78',
     borderRadius: 10,
     padding: 15,
     margin: 15,
@@ -381,6 +382,6 @@ const styles = StyleSheet.create({
   applyButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#12181e',
+    color: '#FFFFFF', // Changed to white for better contrast with gradient
   }
 });

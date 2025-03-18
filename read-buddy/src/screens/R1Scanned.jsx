@@ -1,13 +1,15 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { AppContext } from '../App.tsx';
+import { Image } from 'react-native-animatable';
 
 export default function R1Scanned({ navigation, route }) {
   const scannedText = route.params?.scannedText || 'No text scanned yet';
   const [letterSettings, setLetterSettings] = useState({});
   const { loggedInUser } = useContext(AppContext);
-
+  
   const loadSettingsFromFirestore = async () => {
     if (!loggedInUser) return;
     try {
@@ -25,19 +27,19 @@ export default function R1Scanned({ navigation, route }) {
       console.error('Error loading settings:', error);
     }
   };
-
+  
   useEffect(() => {
     // Initial load
     loadSettingsFromFirestore();
-
+    
     // Reload settings when screen regains focus
     const unsubscribe = navigation.addListener('focus', () => {
       loadSettingsFromFirestore(); // Fetch latest settings from Firestore
     });
-
+    
     return unsubscribe;
   }, [navigation, loggedInUser]);
-
+  
   // Render a line with per-character styling, preserving whole words
   const renderLine = (line) => {
     const words = line.split(' ');
@@ -54,7 +56,7 @@ export default function R1Scanned({ navigation, route }) {
               key={charIndex}
               style={{
                 fontFamily: 'OpenDyslexic3-Regular',
-                fontSize: settings.fontSize,
+                fontSize: settings.fontSize + 14,
                 color: settings.color,
                 fontWeight: settings.bold ? 'bold' : 'normal',
               }}
@@ -67,7 +69,7 @@ export default function R1Scanned({ navigation, route }) {
       </Text>
     ));
   };
-
+  
   // Render text line by line
   const renderLines = (text) => {
     const lines = text.split('\n');
@@ -77,20 +79,26 @@ export default function R1Scanned({ navigation, route }) {
       </Text>
     ));
   };
-
+  
   return (
     <View style={styles.outerContainer}>
+              <TouchableOpacity 
+                style={styles.settingsButton}
+                onPress={() => navigation.navigate('Text Settings', { scannedText: '', letterSettings: {} })}
+              >
+                <Image
+                  source={require('../assets/settings.png')} 
+                  style={styles.settingsIcon}
+                  // If you don't have a settings icon, use this fallback:
+                  // For fallback text icon: <Text style={styles.settingsText}>⚙️</Text>
+                />
+              </TouchableOpacity>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
       >
         <View style={styles.textWrapper}>{renderLines(scannedText)}</View>
       </ScrollView>
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Text Settings', { scannedText, letterSettings })}
-      >
-        <Text style={styles.positiveBtn}>Text Settings</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -98,7 +106,11 @@ export default function R1Scanned({ navigation, route }) {
 const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#5ECCD9', // Turquoise background color matching the image
+  },
+  bottomButtonContainer: {
+    width: '100%',
+    paddingVertical: 10,
     alignItems: 'center',
   },
   scrollView: {
@@ -109,10 +121,24 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 10,
+    padding: 20,
   },
   textWrapper: {
+    backgroundColor: 'white',
+    borderRadius: 30,
+    width: '90%',
+    minHeight: '80%',
+    padding: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   lineContainer: {
     flexWrap: 'wrap',
@@ -126,9 +152,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#12181e',
-    padding: 10,
-    margin: 5,
+    padding: 12,
+    marginBottom: 20,
+    marginTop: 10,
     backgroundColor: '#85fe78',
     borderRadius: 10,
+    alignSelf: 'center',
+    textAlign: 'center',
+    minWidth: 120,
+  },
+   settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(128, 128, 128, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft:160,
+    marginTop:-52,
+    marginBottom:4,
+  },
+
+  settingsText: {
+    fontSize: 20,
+    color: 'white',
+  },
+  settingsIcon: {
+    width: 25,
+    height: 25,
+    tintColor: '#000',
+    fontWeight:'bold',
   },
 });

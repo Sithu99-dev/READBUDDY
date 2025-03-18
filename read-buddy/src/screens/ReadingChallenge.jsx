@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#6cbec9', // Teal background like in the screenshot
     alignItems: 'center',
-    paddingTop: 30, // Reduced from 50 to 30 to move content up
+    paddingTop: 50,
     paddingHorizontal: 16,
   },
   container: {
@@ -341,16 +341,16 @@ const styles = StyleSheet.create({
   
   // Level circle indicator
   levelCircle: {
-    width: 60, // Reduced from 70 to 60
-    height: 60, // Reduced from 70 to 60
-    borderRadius: 30, // Adjusted for smaller circle
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15, // Reduced from 20 to 15
+    marginBottom: 20,
     // Removed backgroundColor since it's now handled by the gradient
   },
   levelNumber: {
-    fontSize: 32, // Reduced from 36 to 32
+    fontSize: 36,
     fontWeight: 'bold',
     color: 'white',
   },
@@ -359,46 +359,46 @@ const styles = StyleSheet.create({
   questionCard: {
     backgroundColor: '#e1e1e1', // Light gray card background
     borderRadius: 20,
-    padding: 15, // Reduced from 20 to 15
+    padding: 20,
     width: '100%',
     alignItems: 'center',
-    minHeight: '75%', // Increased from 70% to 75% to use more space
+    minHeight: '70%',
   },
   questionText: {
-    fontSize: 24, // Reduced from 28 to 24
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 15, // Reduced from 20 to 15
+    marginBottom: 20,
     textAlign: 'center',
   },
   
   // Image styles
   image: {
-    width: 220, // Reduced from 250 to 220
-    height: 220, // Reduced from 250 to 220
-    marginVertical: 15, // Reduced from 20 to 15
+    width: 250,
+    height: 250,
+    marginVertical: 20,
     borderRadius: 10,
   },
   imagePlaceholder: {
-    width: 220, // Reduced from 250 to 220
-    height: 220, // Reduced from 250 to 220
+    width: 250,
+    height: 250,
     backgroundColor: '#d9d9d9',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 15, // Reduced from 20 to 15
+    marginVertical: 20,
     borderRadius: 10,
   },
   
   // Answer buttons
   answerContainer: {
     width: '100%',
-    marginTop: 15, // Reduced from 20 to 15
+    marginTop: 20,
   },
   answerButton: {
     backgroundColor: '#ffffff',
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12, // Reduced from 15 to 12
+    marginBottom: 15,
     width: '100%',
   },
   answerTextContainer: {

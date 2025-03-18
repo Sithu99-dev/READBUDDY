@@ -64,7 +64,7 @@ export default function TextInputScreen({ navigation, route }) {
               key={charIndex}
               style={{
                 fontFamily: 'OpenDyslexic3-Regular',
-                fontSize: settings.fontSize,
+                fontSize: settings.fontSize + 14,
                 color: settings.color,
                 fontWeight: settings.bold ? 'bold' : 'normal',
               }}
