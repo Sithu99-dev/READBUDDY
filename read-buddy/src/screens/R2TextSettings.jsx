@@ -126,12 +126,7 @@ export default function R2TextSettings({ navigation, route }) {
       
       {/* Header with back button and title */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
+
         <Text style={styles.headerTitle}>Text Settings</Text>
       </View>
       

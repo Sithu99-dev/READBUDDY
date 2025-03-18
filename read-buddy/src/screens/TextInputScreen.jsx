@@ -94,12 +94,6 @@ export default function TextInputScreen({ navigation, route }) {
       
       {/* Header with back button and settings */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
         
         <TouchableOpacity 
           style={styles.settingsButton}
@@ -177,8 +171,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(128, 128, 128, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight:160,
-    marginTop:15,
+    marginLeft:160,
+    marginTop:-72,
+    marginBottom:4,
   },
   settingsText: {
     fontSize: 20,
