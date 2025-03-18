@@ -9,7 +9,7 @@ export default function SpeechScreen({ navigation }) {
       imageStyle={{opacity: 0.3}}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.contentContainer}>
-          <Text style={styles.title}>Say the{'\n'}Word!</Text>
+          <Text style={styles.title}>Say the Word!</Text>
 
           <View style={styles.levelsContainer}>
             <TouchableOpacity
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#4A9FBA',
+    color: '#000',
     marginBottom: 30,
     marginLeft: 30,
   },

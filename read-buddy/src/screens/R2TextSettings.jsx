@@ -143,6 +143,7 @@ export default function R2TextSettings({ navigation, route }) {
         <TextInput
           style={styles.searchInput}
           placeholder="Search letter"
+            placeholderTextColor="#8c8c8c"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />

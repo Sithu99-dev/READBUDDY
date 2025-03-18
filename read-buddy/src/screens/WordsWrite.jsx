@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#4A9FBA', // Blue color to match previous screen
+    color: '#000', // Blue color to match previous screen
     marginBottom: 30,
     marginLeft: 20,
   },

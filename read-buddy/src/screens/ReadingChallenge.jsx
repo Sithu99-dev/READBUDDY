@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#6cbec9', // Teal background like in the screenshot
     alignItems: 'center',
-    paddingTop: 50,
+    paddingTop: -10, // Removed padding completely to position at the very top
     paddingHorizontal: 16,
   },
   container: {
@@ -346,8 +346,8 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
-    // Removed backgroundColor since it's now handled by the gradient
+    marginTop: 5, 
+    marginBottom: 0,
   },
   levelNumber: {
     fontSize: 36,
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   questionCard: {
     backgroundColor: '#e1e1e1', // Light gray card background
     borderRadius: 20,
-    padding: 20,
+    padding:-20,
     width: '100%',
     alignItems: 'center',
     minHeight: '70%',

@@ -9,8 +9,11 @@ import {
   Alert,
   ActivityIndicator,
   ImageBackground,
+  SafeAreaView,
+  Dimensions,
 } from 'react-native';
 import SignatureScreen from 'react-native-signature-canvas';
+import LinearGradient from 'react-native-linear-gradient';
 import Tts from 'react-native-tts';
 import Video from 'react-native-video';
 import numbersData from '../data/numbers.json';
@@ -23,8 +26,7 @@ export default function WLevel2({ navigation }) {
   const [currentNum, setCurrentNum] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  
+  const [showGrid, setShowGrid] = useState(true); // Grid visibility state
 
   const playAudio = () => {
     try {
@@ -62,10 +64,9 @@ export default function WLevel2({ navigation }) {
     }
   };
 
-  const click =() =>{
+  const click = () => {
     console.log(currentNum.number)
     const fetchData = async () => {
-      // setIsLoading(true);
       try {
         const response = await fetch(myurl+'/numbers', {
           method: 'POST',
@@ -79,8 +80,6 @@ export default function WLevel2({ navigation }) {
         setModelResul(data["res"]);
       } catch (error) {
         console.error('Error:', error);
-      } finally {
-        // setIsLoading(false);
       }
     };
 
@@ -125,180 +124,341 @@ export default function WLevel2({ navigation }) {
     }
   };
 
-  const webStyle = `
-    .m-signature-pad { width: 100%; height: 100%; margin: 0; padding: 0;  }
-    .m-signature-pad--body { border: none; width: 100%; height: 100%; }
-    canvas { width: 100%; height: 100%; }
-  `;
+  // Toggle the grid visibility
+  const toggleGrid = () => {
+    setShowGrid(!showGrid);
+  };
+
+  // Create a grid canvas style with CSS
+  const createWebStyle = () => {
+    const gridSize = 20; // Size of each grid cell in pixels
+    const gridColor = '#E0E0E0'; // Light gray grid lines
+
+    const baseStyle = `
+      .m-signature-pad { width: 100%; height: 100%; margin: 0; padding: 0; }
+      .m-signature-pad--body { border: none; width: 100%; height: 100%; }
+      canvas { width: 100%; height: 100%; background-color: white; }
+      .m-signature-pad--footer { display: none; }
+      body { margin: 0; }
+    `;
+
+    // Only add grid if showGrid is true
+    const gridStyle = showGrid ? `
+      canvas { 
+        background-size: ${gridSize}px ${gridSize}px;
+        background-image:
+          linear-gradient(to right, ${gridColor} 1px, transparent 1px),
+          linear-gradient(to bottom, ${gridColor} 1px, transparent 1px);
+      }
+    ` : '';
+
+    return baseStyle + gridStyle;
+  };
 
   return (
-    <View style={styles.container}>
-      {!videoUrl && (
-        <View style={styles.insContainer}>
-          <View>
-            <Text style={styles.insTxt}>Click here to Listen the</Text>
-            <Text style={styles.insTxt}>Number & write it below :</Text>
+    <ImageBackground source={require('../assets/sp.png')} style={styles.background} imageStyle={{opacity: 0.3}}>
+      <SafeAreaView style={styles.container}>
+        {!videoUrl && (
+          <>
+            <View style={styles.instructionCard}>
+              <View style={styles.instructionContentContainer}>
+              <Text style={styles.instructionText}>
+              Write the number on the grid. You can also remove the grid if you prefer.
+                </Text>
+                <Text style={styles.instructionText}>
+                  Click here to Listen the Number.
+                </Text>
+                <TouchableOpacity onPress={playAudio} style={styles.speakerButton}>
+                  <Image source={require('../assets/speaker0.png')} style={styles.speakerIcon} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.signatureCardContainer}>
+              <View style={styles.signatureCard}>
+                <View style={styles.canvasContainer}>
+                  <SignatureScreen
+                    ref={signatureRef}
+                    webStyle={createWebStyle()}
+                    onOK={uploadSignature}
+                    onEmpty={() => console.log('Signature is empty')}
+                    onBegin={() => console.log('Drawing started')}
+                    onEnd={() => console.log('Drawing ended')}
+                  />
+                </View>
+
+                {/* Grid Toggle Button */}
+                <TouchableOpacity
+                  style={styles.gridToggleButton}
+                  onPress={toggleGrid}
+                >
+                  <Text style={styles.gridToggleText}>
+                    {showGrid ? "Hide Grid" : "Show Grid"}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Action buttons at the bottom of the white card */}
+                <View style={styles.actionButtonsContainer}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={clearCanvas}
+                    disabled={loading}
+                  >
+                    <Text style={styles.actionButtonText}>CLEAR</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={submitCanvas}
+                    disabled={loading}
+                  >
+                    <Text style={styles.actionButtonText}>SUBMIT</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </>
+        )}
+
+        {videoUrl && (
+          <View style={styles.mainContainer}>
+            <View style={styles.feedbackContainer}>
+              <Text style={styles.feedbackText}>
+                Nice Try! Here is the correct answer
+              </Text>
+              <Image 
+                source={require('../assets/mascot.png')}
+                style={styles.mascotImage}
+              />
+            </View>
+            
+            <View style={styles.videoContainer}>
+              <Text style={styles.videoLabel}>video</Text>
+              <Video
+                source={{ uri: videoUrl }}
+                style={styles.video}
+                controls={true}
+                resizeMode="contain"
+                onLoad={() => console.log('Video loaded')}
+                onEnd={() => {
+                  console.log('Video ended');
+                  setVideoUrl(null);
+                }}
+                onError={(e) => {
+                  console.log('Video error:', e.error);
+                  Alert.alert('Error', 'Failed to play video');
+                  setVideoUrl(null);
+                }}
+              />
+            </View>
+            
+            <TouchableOpacity 
+              onPress={() => setVideoUrl(null)} 
+              style={styles.buttonTouchable}
+            >
+              <LinearGradient
+                style={styles.nextButton}
+                colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+              >
+                <Text style={styles.nextButtonText}>TRY AGAIN</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={playAudio}>
-            <Text style={styles.speakBtnTxt}>
-              <Image source={require('../assets/speaker0.png')} style={styles.speakBtnIcon} />
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        )}
 
-      {!videoUrl && (
-        // <ImageBackground
-        //   source={require('../assets/kite.jpg')} // Replace with your desired background image
-        //   style={styles.canvasContainer}
-        //   resizeMode="cover"
-        // >
-        <View style={styles.canvasContainer}>
-          <SignatureScreen
-            ref={signatureRef}
-            webStyle={webStyle}
-            bgHeight={"100%"}
-            bgWidth={"100%"}
-            // imageType={'image/jpeg'}
-            bgSrc={"https://i.ibb.co/8g7jnFF5/numbg.png"}
-            onOK={uploadSignature}
-            onEmpty={() => console.log('Signature is empty')}
-            onBegin={() => console.log('Drawing started')}
-            onEnd={() => console.log('Drawing ended')}
-          />
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#4e9ede" />
+            <Text style={styles.loadingText}>Uploading...</Text>
           </View>
-        // </ImageBackground>
-      )}
-
-      {videoUrl && (
-        <View style={styles.videoContainer}>
-          <Text style={styles.videoTxt}>Nice Try! Here is the correct answer</Text>
-          <Video
-            source={{ uri: videoUrl }}
-            style={styles.video}
-            controls={true}
-            resizeMode="contain"
-            onLoad={() => console.log('Video loaded')}
-            onEnd={() => {
-              console.log('Video ended');
-              setVideoUrl(null);
-            }}
-            onError={(e) => {
-              console.log('Video error:', e.error);
-              Alert.alert('Error', 'Failed to play video');
-              setVideoUrl(null);
-            }}
-          />
-        </View>
-      )}
-
-      {!videoUrl && (
-        <View style={styles.fixToText}>
-          <TouchableOpacity onPress={submitCanvas} disabled={loading}>
-            <Text style={styles.positiveBtn}>Submit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={clearCanvas} disabled={loading}>
-            <Text style={styles.negativeBtn}>Clear</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#27ac1f" />
-          <Text style={styles.loadingText}>Uploading...</Text>
-        </View>
-      )}
-    </View>
+        )}
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
+const { width, height } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+  },
   container: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#fff',
-    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 15,
   },
-  insContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  mainContainer: {
+    flex: 1,
+    width: '100%',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#27ac1f',
-    padding: 18,
-    gap: 15,
-    marginBottom: 10,
-    width: '90%',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
   },
-  insTxt: {
-    fontSize: 23,
-    fontWeight: '600',
-    color: '#27ac1f',
+  feedbackContainer: {
+    width: '100%',
+    height: height * 0.3,
+    backgroundColor: 'rgba(151, 216, 196, 0.8)',
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 5,
+    position: 'relative',
   },
-  speakBtnIcon: {
-    width: 50,
-    height: 50,
-    marginRight: 10,
+  feedbackText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'navy',
+    textAlign: 'center',
+    flex: 1,
   },
-  speakBtnTxt: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#12181e',
-    padding: 10,
-    backgroundColor: '#85fe78',
-    borderRadius: 35,
-  },
-  canvasContainer: {
-    width: '90%',
-    height: 300,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#000',
-    borderRadius: 10,
-    overflow: 'hidden', // Ensure the image doesn’t bleed outside
+  mascotImage: {
+    width: 100,
+    height: 180,
+    resizeMode: 'contain',
   },
   videoContainer: {
-    width: '90%',
-    height: 400,
-    backgroundColor: '#000',
-    marginBottom: 10,
-    borderRadius: 10,
+    width: '100%',
+    height: height * 0.4,
+    backgroundColor: 'rgba(151, 216, 196, 0.5)',
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    position: 'relative',
+  },
+  videoLabel: {
+    position: 'absolute',
+    bottom: 20,
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: 'rgba(77, 122, 111, 0.7)',
+    textAlign: 'center',
   },
   video: {
     width: '100%',
-    height: '100%',
+    height: '90%',
+    borderRadius: 15,
   },
-  videoTxt: {
-    fontSize: 23,
+  buttonTouchable: {
+    width: '80%',
+    overflow: 'hidden',
+    borderRadius: 30,
+    marginBottom: 20,
+  },
+  nextButton: {
+    paddingVertical: 15,
+    borderRadius: 30,
+    width: '100%',
+    alignItems: 'center',
+  },
+  nextButtonText: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  instructionCard: {
+    width: '100%',
+    backgroundColor: 'rgba(151, 216, 196, 0.9)',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  instructionContentContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  instructionText: {
+    fontSize: 20,
+    color: 'black',
     fontWeight: '600',
-    color: '#27ac1f',
+    marginBottom: 15,
     textAlign: 'center',
   },
-  fixToText: {
+  speakerButton: {
+    backgroundColor: '#4e9ede',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  speakerIcon: {
+    width: 40,
+    height: 40,
+    tintColor: 'white',
+  },
+  signatureCardContainer: {
+    width: '100%',
+    flex: 1,
+    marginVertical: 10,
+  },
+  signatureCard: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'white',
+    borderRadius: 15,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    justifyContent: 'space-between',
+  },
+  canvasContainer: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: 'white',
+  },
+  gridToggleButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(78, 158, 222, 0.8)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 15,
+    zIndex: 10,
+  },
+  gridToggleText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  actionButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 70,
-    marginTop: 15,
-    width: '90%',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    backgroundColor: 'white',
+    marginBottom: 20,
   },
-  positiveBtn: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#12181e',
-    padding: 10,
-    margin: 5,
-    backgroundColor: '#85fe78',
-    borderRadius: 10,
+  actionButton: {
+    backgroundColor: '#4e9ede',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    width: '48%',
+    alignItems: 'center',
+    marginBottom: 30,
   },
-  negativeBtn: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#12181e',
-    padding: 10,
-    margin: 5,
-    backgroundColor: '#bcbcbc',
-    borderRadius: 10,
+  actionButtonText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
