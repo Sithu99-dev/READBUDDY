@@ -11,6 +11,7 @@ import {
   PermissionsAndroid,
   Image,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import words from '../data/speach_words.json';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import Sound from 'react-native-sound';
@@ -99,11 +100,14 @@ export default function LetterAnimation({ navigation, route }) {
     setCountdown(5);
   };
 
-  const startAnimation = () => {
+  const startAnimation = async () => {
     if (isAnimating) return;
     setIsAnimating(true);
-    setStatus(`Animating "${word}"...`);
+    setStatus(`Animating "${word}" and playing audio...`);
     setAnimationStep(2);
+
+    // Play the correct audio when animation starts
+    await playCorrectAudio();
 
     const animations = letterGroups.map((_, index) => {
       return Animated.timing(letterAnimations[index], {
@@ -216,8 +220,8 @@ export default function LetterAnimation({ navigation, route }) {
         setStatus('Click Next to continue');
       } else {
         setStatus('Listen to the correct pronunciation');
-        playCorrectAudio();
-        startAnimation();
+        // playCorrectAudio();
+        // startAnimation();
       }
     } catch (error) {
       console.error('Stop recording/upload error:', error);
@@ -333,11 +337,14 @@ export default function LetterAnimation({ navigation, route }) {
       {modelResult === null && (
         <View style={styles.maincontrols}>
           <TouchableOpacity
-            style={[styles.speakButton, isRecording && styles.buttonDisabled]}
+            style={[isRecording && styles.buttonDisabled]}
             onPress={startRecording}
             disabled={isRecording}
           >
-            <Text style={styles.buttonText}>Speak</Text>
+              <Image 
+              source={require('../assets/voice.png')} 
+              style={styles.microphoneIcon} 
+            />
           </TouchableOpacity>
         </View>
       )}
@@ -347,50 +354,86 @@ export default function LetterAnimation({ navigation, route }) {
         {/* If modelResult is false, show Start Animation, Reset, Replay */}
         {modelResult === false && (
           <>
-
           <View style={styles.maincontrols}>
-            
             <TouchableOpacity
-              style={[styles.button, isAnimating && styles.buttonDisabled]}
+              style={[styles.buttonContainer, isAnimating && styles.buttonDisabled]}
               onPress={startAnimation}
               disabled={isAnimating}
             >
-              <Text style={styles.buttonText}>Start Animation</Text>
+              <LinearGradient
+                style={styles.gradientButton}
+                colors={['#03cdc0', '#7e34de']}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+              >
+                <Text style={styles.buttonText}>Start Animation</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
+          
           <TouchableOpacity
-              style={[styles.speakButton, isRecording && styles.buttonDisabled]}
-              onPress={startRecording}
-              disabled={isRecording}
+            style={[styles.buttonContainer, isRecording && styles.buttonDisabled]}
+            onPress={startRecording}
+            disabled={isRecording}
+          >
+            <LinearGradient
+              style={styles.gradientButton}
+              colors={['#03cdc0', '#7e34de']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
             >
               <Text style={styles.buttonText}>Speak</Text>
-            </TouchableOpacity>
-        
-            <TouchableOpacity
-              style={[styles.button, animationStep === 1 && styles.buttonDisabled]}
-              onPress={resetAnimation}
-              disabled={animationStep === 1}
+            </LinearGradient>
+          </TouchableOpacity>
+      
+          <TouchableOpacity
+            style={[styles.buttonContainer, animationStep === 1 && styles.buttonDisabled]}
+            onPress={resetAnimation}
+            disabled={animationStep === 1}
+          >
+            <LinearGradient
+              style={styles.gradientButton}
+              colors={['#03cdc0', '#7e34de']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
             >
               <Text style={styles.buttonText}>Reset</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={replayAudio}>
+            </LinearGradient>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.buttonContainer}
+            onPress={replayAudio}
+          >
+            <LinearGradient
+              style={styles.gradientButton}
+              colors={['#03cdc0', '#7e34de']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
+            >
               <Text style={styles.buttonText}>Replay</Text>
-            </TouchableOpacity>
-            {/* <TouchableOpacity style={styles.speakButton} onPress={goToNextWord}>
-            <Text style={styles.buttonText}>Next</Text>
-          </TouchableOpacity> */}
+            </LinearGradient>
+          </TouchableOpacity>
           </>
         )}
 
         {/* If modelResult is true, show only Next button */}
         {modelResult === true && (
-          <TouchableOpacity style={styles.speakButton} onPress={goToNextWord}>
-            <Text style={styles.buttonText}>Next</Text>
+          <TouchableOpacity 
+            style={styles.buttonContainer}
+            onPress={goToNextWord}
+          >
+            <LinearGradient
+              style={styles.gradientButton}
+              colors={['#03cdc0', '#7e34de']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
+            >
+              <Text style={styles.buttonText}>Next</Text>
+            </LinearGradient>
           </TouchableOpacity>
         )}
       </View>
-
-      
     </View>
   );
 }
@@ -399,19 +442,22 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     width: '100%',
-   
   },
   container: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: 80,
     paddingHorizontal: 15,
-    backgroundColor: 'rgba(81, 179, 235, 0.9)',
+    backgroundColor: 'rgba(151, 216, 196, 0.8)',
   },
   titleText: {
     fontSize: 28,
     fontWeight: '600',
     color: '#333',
+  },
+  microphoneIcon: {
+    width: 80,
+    height: 80,
   },
   wordTitle: {
     fontSize: 32,
@@ -517,9 +563,24 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 10,
   },
-  button: {
+  buttonContainer: {
+    borderRadius: 10,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  gradientButton: {
     paddingVertical: 12,
     paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  button: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     backgroundColor: '#c2c8c9',
     borderRadius: 10,
     shadowColor: '#000',
@@ -540,20 +601,20 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   buttonDisabled: {
-    backgroundColor: '#cccccc',
+    opacity: 0.5,
   },
   buttonText: {
-    fontSize: 24,
-    color: '#12181e',
-    fontWeight: '700',
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   status: {
     backgroundColor: '#fba49a',
     padding: 10,
     borderRadius: 40,
-    marginTop: 10,
+    marginTop: -10,
     marginBottom:30,
-    fontWeight: 'bold',
+    fontWeight: '800',
     textAlign: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
