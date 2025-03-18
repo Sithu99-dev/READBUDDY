@@ -168,6 +168,7 @@ const styles = StyleSheet.create({
     height: 24,
     tintColor: '#000',
     fontWeight:'bold',
+
   },
   settingsButton: {
     width: 40,
@@ -176,6 +177,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(128, 128, 128, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight:160,
+    marginTop:15,
   },
   settingsText: {
     fontSize: 20,

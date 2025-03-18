@@ -230,6 +230,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(128, 128, 128, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight:160,
+    marginTop:15,
   },
 
   settingsText: {
