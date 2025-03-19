@@ -91,6 +91,7 @@ export default function R2TextSettings({ navigation, route }) {
             fontSize: settings.fontSize,
             color: settings.color || 'black',
             fontWeight: settings.bold ? 'bold' : 'normal',
+            // -----------------------------[]
           }}
         >
           {char}

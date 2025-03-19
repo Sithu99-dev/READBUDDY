@@ -29,29 +29,35 @@ import { RootStackParamList } from '../App.tsx'; // Adjust path if needed
 
 const SNAKE_INITIAL_POSITION: Coordinate[] = [{ x: 5, y: 5 }];
 const FOOD_INITIAL_POSITION: Coordinate = { x: 5, y: 20 };
+
 const GAME_BOUNDS = { xMin: 0, xMax: 35, yMin: 0, yMax: 59 };
+
 const MOVE_INTERVAL = 200;
+
 const SCORE_INCREMENT = 10;
+
 
 Sound.setCategory('Playback');
 
+// Load bite sound effect
 const biteSound = new Sound('bite.mp3', Sound.MAIN_BUNDLE, (error) => {
   if (error) {console.log('Failed to load bite sound:', error);}
   else {console.log('Bite sound loaded successfully');}
 });
 
+// Load crash sound effect
 const crashSound = new Sound('crash.mp3', Sound.MAIN_BUNDLE, (error) => {
   if (error) {console.log('Failed to load crash sound:', error);}
   else {console.log('Crash sound loaded successfully');}
 });
 
+// Function to randomly select a fruit emoji to display
 function getRandomFruitEmoji(): string {
   const fruitEmojis = ['🍎', '🍊', '🍋', '🍇', '🍉', '🍓', '🍑', '🍍'];
   const randomIndex = Math.floor(Math.random() * fruitEmojis.length);
   return fruitEmojis[randomIndex];
 }
 
-// Type the navigation prop using RootStackParamList
 export default function Game({ navigation }: NativeStackScreenProps<RootStackParamList, 'Game'>): JSX.Element {
   const { loggedInUser } = useContext(AppContext);
   const [direction, setDirection] = useState<Direction>(Direction.Right);
@@ -66,6 +72,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
   const [rightFruitEmoji, setRightFruitEmoji] = useState<string>(getRandomFruitEmoji());
   const [fruitSpawnTime, setFruitSpawnTime] = useState<number>(Date.now());
   const [timeToReachFruit, setTimeToReachFruit] = useState<number[]>([]);
+
   const [gameOverResult, setGameOverResult] = useState<{
     result: string;
     description: string;
@@ -85,13 +92,16 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
     message7: string;
   } | null>(null);
   const [topPlayers, setTopPlayers] = useState<{ user_name: string; score: number; email: string }[]>([]);
+
   const [currentUserScore, setCurrentUserScore] = useState<number>(0);
 
+  // Fetch leaderboard data on component mount
   useEffect(() => {
     const fetchLeaderboard = async () => {
       if (!loggedInUser) {return;}
 
       try {
+        // Get top 3 players from Firestore
         const leaderboardSnapshot = await firestore()
           .collection('snake_game_leadersboard')
           .orderBy('score', 'desc')
@@ -104,6 +114,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
         }));
         setTopPlayers(topPlayersData);
 
+        // Get current user's score
         const currentUserDoc = await firestore()
           .collection('snake_game_leadersboard')
           .doc(loggedInUser)
@@ -120,6 +131,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
     fetchLeaderboard();
   }, [loggedInUser]);
 
+  // Update high score if current score is better
   const updateHighScore = async (newScore: number) => {
     if (!loggedInUser) {return;}
 
@@ -131,10 +143,12 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
         const userData = userDoc.data();
         const storedScore = userData?.score || 0;
         if (newScore > storedScore) {
+          // Update score in Firestore
           await userRef.update({ score: newScore });
           setCurrentUserScore(newScore);
           console.log('High score updated:', newScore);
 
+          // Refresh leaderboard
           const leaderboardSnapshot = await firestore()
             .collection('snake_game_leadersboard')
             .orderBy('score', 'desc')
@@ -153,6 +167,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
     }
   };
 
+  // Initialize wrong fruits (obstacles) based on level
   const initializeWrongFruits = (count: number) => {
     const newWrongFruits: Coordinate[] = [];
     for (let i = 0; i < count; i++) {
@@ -166,18 +181,21 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
     setWrongFruits(newWrongFruits);
   };
 
+  // Handle level selection
   const handleLevelSelect = (selectedLevel: number) => {
     setLevel(selectedLevel);
     setIsLevelSelected(true);
     initializeWrongFruits(selectedLevel * 2);
   };
 
+  // Calculate move interval based on level (higher level = faster snake)
   const getMoveInterval = () => {
     const speedIncrease = (level - 1) * 20;
     const interval = MOVE_INTERVAL - speedIncrease;
-    return interval > 50 ? interval : 50;
+    return interval > 50 ? interval : 50; // Minimum 50ms
   };
 
+  // Set up game loop to move snake at regular intervals
   useEffect(() => {
     if (!isGameOver && isLevelSelected) {
       const intervalId = setInterval(() => {
@@ -187,6 +205,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
     }
   }, [snake, isGameOver, isPaused, level, isLevelSelected]);
 
+  // Spawn new food at random position
   const spawnNewFood = () => {
     const newFoodPosition = randomFoodPosition(
       GAME_BOUNDS.xMax,
@@ -207,10 +226,12 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
     }
   };
 
+  // Main game logic to move snake and handle collisions
   const moveSnake = () => {
     const snakeHead = snake[0];
     const newHead: Coordinate = { ...snakeHead };
 
+    // Update head position based on direction
     switch (direction) {
       case Direction.Up:
         newHead.y -= 1;
@@ -228,6 +249,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
         break;
     }
 
+    // Check if snake hit boundary
     if (checkGameOver(newHead, GAME_BOUNDS)) {
       setIsGameOver(true);
       crashSound.play((success) => {
@@ -237,6 +259,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
       return;
     }
 
+    // Check if snake hit itself
     if (snake.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
       setIsGameOver(true);
       crashSound.play((success) => {
@@ -246,6 +269,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
       return;
     }
 
+    // Check if snake hit wrong fruit
     const tolerance = 1;
     const hasEatenWrongFruit = wrongFruits.some(
       (fruit) =>
@@ -261,33 +285,38 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
       return;
     }
 
+    // Check if snake ate food
     const foodTolerance = 2;
     if (Math.abs(newHead.x - food.x) <= foodTolerance && Math.abs(newHead.y - food.y) <= foodTolerance) {
       const timeTaken = (Date.now() - fruitSpawnTime) / 1000;
       setTimeToReachFruit(prev => [...prev, timeTaken]);
       spawnNewFood();
-      setSnake([newHead, ...snake]);
+      setSnake([newHead, ...snake]); // Add new head without removing tail (grow snake)
       setScore(prevScore => prevScore + SCORE_INCREMENT);
       biteSound.play((success) => {
         if (success) {console.log('Bite sound played successfully');}
         else {console.log('Bite sound playback failed');}
       });
     } else {
-      setSnake([newHead, ...snake.slice(0, -1)]);
+      setSnake([newHead, ...snake.slice(0, -1)]); // Remove tail when moving
     }
   };
 
+  // Handle swipe gestures to change direction
   const handleGesture = (event: GestureEventType) => {
     const { translationX, translationY } = event.nativeEvent;
     let newDirection = direction;
 
+    // Determine primary swipe direction
     if (Math.abs(translationX) > Math.abs(translationY)) {
+      // Horizontal swipe
       if (translationX > 0 && direction !== Direction.Left) {
         newDirection = Direction.Right;
       } else if (translationX < 0 && direction !== Direction.Right) {
         newDirection = Direction.Left;
       }
     } else {
+      // Vertical swipe
       if (translationY > 0 && direction !== Direction.Up) {
         newDirection = Direction.Down;
       } else if (translationY < 0 && direction !== Direction.Down) {
@@ -298,6 +327,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
     setDirection(newDirection);
   };
 
+  // Reset game to initial state
   const reloadGame = () => {
     setIsLevelSelected(false);
     setLevel(1);
@@ -323,53 +353,47 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
       const averageSpeed = timeToReachFruit.length > 0
         ? timeToReachFruit.reduce((a, b) => a + b, 0) / timeToReachFruit.length
         : 0;
-  
+
       console.log(`Level: ${level}, Average Speed: ${averageSpeed}, Score: ${score}`);
-  
-      // Find matching result based on level and average speed range
+
       let result;
-      
+
       if (timeToReachFruit.length === 0) {
-        // If player didn't eat any food, find a "Low" result for their level
         result = gameResults.find(record =>
           record.level === level && record.result.includes('Low')
         );
       } else {
-        // Find result where level matches and speed is within range
         result = gameResults.find(record =>
           record.level === level &&
           averageSpeed >= record.rangemin &&
           averageSpeed <= record.rangemax
         );
-        
-        // If no matching range found, find closest one
+
         if (!result) {
           const levelResults = gameResults.filter(record => record.level === level);
-          
+
           if (levelResults.length > 0) {
-            // Default to "Medium" if we can't determine the exact match
             result = levelResults.find(record => record.result.includes('Medium'));
-            
-            // Log warning about unmatched range
+
             console.warn(`No exact range match found for level ${level} with speed ${averageSpeed}`);
           }
         }
       }
-  
+
       const gameResult = result || {
-        result: "Unknown",
-        description: "No matching performance range found.",
-        topic1: "", topic2: "", topic3: "", topic4: "", topic5: "", topic6: "", topic7: "",
-        message1: "", message2: "", message3: "", message4: "", message5: "", message6: "", message7: "",
+        result: 'Unknown',
+        description: 'No matching performance range found.',
+        topic1: '', topic2: '', topic3: '', topic4: '', topic5: '', topic6: '', topic7: '',
+        message1: '', message2: '', message3: '', message4: '', message5: '', message6: '', message7: '',
       };
-      
+
       setGameOverResult(gameResult);
-  
+
       if (!navigation) {
         console.error('Navigation prop is undefined in Game component');
         return;
       }
-  
+
       Alert.alert(
         'Game Over',
         `Your Score: ${score}`,
@@ -381,19 +405,18 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
         ],
         { cancelable: false }
       );
-  
+
       updateHighScore(score);
     }
   }, [isGameOver, score, navigation]);
-  
+
   if (!isLevelSelected) {
     return (
-      <ImageBackground 
+      <ImageBackground
       source={require('../assets/speakingbg.png')}
         style={styles.levelSelectionBackground}
         imageStyle={{opacity: 0.3}}>
         <ScrollView contentContainerStyle={styles.levelSelectionContainer}>
-          {/* Scoreboard Section */}
           <View style={styles.scoreboardContainer}>
             <Text style={styles.scoreboardTitle}>Scoreboard</Text>
             <View style={styles.scoreboardItems}>
@@ -406,44 +429,42 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
               ))}
               {topPlayers.length === 0 && (
                 <>
-                  <View style={styles.scoreItem}></View>
-                  <View style={styles.scoreItem}></View>
-                  <View style={styles.scoreItem}></View>
+                  <View style={styles.scoreItem} />
+                  <View style={styles.scoreItem} />
+                  <View style={styles.scoreItem} />
                 </>
               )}
             </View>
           </View>
-          
-          {/* Level Selection Title */}
+
           <Text style={styles.levelSelectionTitle}>Level Selection</Text>
-          
-          {/* Level Buttons */}
+
           <View style={styles.levelsContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.levelButton, styles.level1]}
               onPress={() => handleLevelSelect(1)}>
               <Text style={styles.levelButtonText}>Level 01</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.levelButton, styles.level2]}
               onPress={() => handleLevelSelect(2)}>
               <Text style={styles.levelButtonText}>Level 02</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.levelButton, styles.level3]}
               onPress={() => handleLevelSelect(3)}>
               <Text style={styles.levelButtonText}>Level 03</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.levelButton, styles.level4]}
               onPress={() => handleLevelSelect(4)}>
               <Text style={styles.levelButtonText}>Level 04</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.levelButton, styles.level5]}
               onPress={() => handleLevelSelect(5)}>
               <Text style={styles.levelButtonText}>Level 05</Text>
@@ -482,6 +503,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
   );
 }
 
+// Get window dimensions for responsive layout
 const windowHeight = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
@@ -491,7 +513,7 @@ const styles = StyleSheet.create({
   },
   levelSelectionBackground: {
     flex: 1,
-    backgroundColor: '#5ECCD9', // Turquoise background color
+    backgroundColor: '#5ECCD9',
   },
   levelSelectionContainer: {
     flexGrow: 1,
@@ -551,13 +573,13 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   level1: {
-    backgroundColor: 'rgba(153, 222, 186, 0.9)', 
+    backgroundColor: 'rgba(153, 222, 186, 0.9)',
     height: 60,
     width: '70%',
     marginRight:120,
   },
   level2: {
-    backgroundColor: 'rgba(244, 214, 176, 0.9)', 
+    backgroundColor: 'rgba(244, 214, 176, 0.9)',
     height: 65,
     width: '80%',
     marginRight:90,
@@ -569,7 +591,7 @@ const styles = StyleSheet.create({
     marginRight:70,
   },
   level4: {
-    backgroundColor: 'rgba(239, 148, 148, 0.9)', 
+    backgroundColor: 'rgba(239, 148, 148, 0.9)',
     height: 75,
     width: '100%',
     marginRight:40,
