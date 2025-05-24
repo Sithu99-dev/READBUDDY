@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -39,13 +40,13 @@ export default function R2TextSettings({ navigation, route }) {
   ];
 
   // Filter letters based on search query
-  const filteredLetters = letters.filter(letter => 
+  const filteredLetters = letters.filter(letter =>
     letter.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   useEffect(() => {
     const loadSettingsFromFirestore = async () => {
-      if (!loggedInUser) return;
+      if (!loggedInUser) {return;}
       try {
         const userDoc = await firestore()
           .collection('snake_game_leadersboard')
@@ -88,7 +89,7 @@ export default function R2TextSettings({ navigation, route }) {
           key={index}
           style={{
             fontFamily: 'OpenDyslexic3-Regular',
-            fontSize: settings.fontSize,
+            fontSize: settings.fontSize + 14,
             color: settings.color || 'black',
             fontWeight: settings.bold ? 'bold' : 'normal',
             // -----------------------------[]
@@ -125,20 +126,20 @@ export default function R2TextSettings({ navigation, route }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#5FC3C0" barStyle="dark-content" />
-      
+
       {/* Header with back button and title */}
       <View style={styles.header}>
 
         <Text style={styles.headerTitle}>Text Settings</Text>
       </View>
-      
+
       {/* Preview sections */}
       <View style={styles.previewContainer}>
         <View style={styles.previewText}>
           {renderLetterPreview('THE QUICK BROWN FOX JUMPS OVER A LAZY DOG.')}
         </View>
       </View>
-      
+
       {/* Search bar */}
       <View style={styles.searchContainer}>
         <TextInput
@@ -152,13 +153,13 @@ export default function R2TextSettings({ navigation, route }) {
           <Text>🔍</Text>
         </TouchableOpacity>
       </View>
-      
+
       {/* Scrollable settings */}
       <ScrollView style={styles.scrollView}>
         {filteredLetters.map((letter) => (
           <View key={letter} style={styles.letterSettings}>
             <Text style={styles.letterTitle}>Letter - {letter}</Text>
-            
+
             <View style={styles.settingsCard}>
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Font Size (18 - 34)</Text>
@@ -173,10 +174,10 @@ export default function R2TextSettings({ navigation, route }) {
                   thumbTintColor="#5F4B8B"
                 />
               </View>
-              
+
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Font Color</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.colorSelector}
                   onPress={() => {
                     setSelectedLetter(letter);
@@ -189,21 +190,21 @@ export default function R2TextSettings({ navigation, route }) {
                   <Text style={styles.dropdownIcon}>▼</Text>
                 </TouchableOpacity>
               </View>
-              
+
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Boldness</Text>
                 <Switch
                   value={letterSettings[letter]?.bold || false}
                   onValueChange={(value) => updateLetterSetting(letter, 'bold', value)}
-                  trackColor={{ false: "#D9D9D9", true: "#5F4B8B" }}
-                  thumbColor={letterSettings[letter]?.bold ? "#FFFFFF" : "#F4F3F4"}
+                  trackColor={{ false: '#D9D9D9', true: '#5F4B8B' }}
+                  thumbColor={letterSettings[letter]?.bold ? '#FFFFFF' : '#F4F3F4'}
                 />
               </View>
             </View>
           </View>
         ))}
       </ScrollView>
-      
+
       {/* Color picker modal */}
       <Modal
         visible={showColorPicker}
@@ -229,7 +230,7 @@ export default function R2TextSettings({ navigation, route }) {
           </View>
         </View>
       </Modal>
-      
+
       {/* Apply button with LinearGradient */}
       <TouchableOpacity onPress={saveSettingsToFirestore}>
         <LinearGradient
@@ -385,5 +386,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF', // Changed to white for better contrast with gradient
-  }
+  },
 });

@@ -1,9 +1,13 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable curly */
+/* eslint-disable react-native/no-inline-styles */
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, Modal } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import Sound from 'react-native-sound';
 import questionsData from '../data/Reading_Activity.json';
 import storage from '@react-native-firebase/storage';
-import ResultScreen from '../screens/rActivityScreen/ResultScreen'; // Import the ResultScreen component
+import ResultScreen from '../screens/rActivityScreen/ResultScreen';
 
 export default function ReadingChallenge({ navigation }) {
   const [currentLevel, setCurrentLevel] = useState(1);
@@ -13,16 +17,19 @@ export default function ReadingChallenge({ navigation }) {
   const [gameState, setGameState] = useState('splash');
   const [imageUrl, setImageUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  // New state for correct answer popup
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
   const [correctWord, setCorrectWord] = useState('');
   const [correctWordProps, setCorrectWordProps] = useState({
     fontSize: 24,
     space: 2,
     hLetters: [],
-    color: 'red'
+    color: 'red',
   });
-  
+
+  // Sound state
+  const [backgroundSound, setBackgroundSound] = useState(null);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+
   const levelStructure = {
     1: ['1-1', '1-2', '1-3', '1-4', '1-5'],
     2: ['2-1', '2-2', '2-3', '2-4'],
@@ -31,15 +38,82 @@ export default function ReadingChallenge({ navigation }) {
     5: ['5-1', '5-2', '5-3'],
   };
 
+  // Initialize sound
+  useEffect(() => {
+    // Enable playback in silence mode (iOS)
+    Sound.setCategory('Playback');
+
+    // Load background music
+    const sound = new Sound('sample_sound.mp3', Sound.MAIN_BUNDLE, (error) => {
+      if (error) {
+        console.log('Failed to load sound', error);
+        return;
+      }
+      console.log('Sound loaded successfully');
+      setBackgroundSound(sound);
+
+      // Set sound properties
+      sound.setNumberOfLoops(-1); // Loop indefinitely
+      sound.setVolume(0.3); // Set volume to 30%
+
+      // Play background music if sound is enabled
+      if (isSoundEnabled) {
+        sound.play((success) => {
+          if (!success) {
+            console.log('Sound playback failed');
+          }
+        });
+      }
+    });
+
+    // Cleanup when component unmounts
+    return () => {
+      if (sound) {
+        sound.stop();
+        sound.release();
+      }
+    };
+  }, []);
+
+  // Control sound based on game state
+  useEffect(() => {
+    if (backgroundSound && isSoundEnabled) {
+      if (gameState === 'playing') {
+        backgroundSound.setVolume(0.3); // Normal volume during gameplay
+      } else if (gameState === 'splash') {
+        backgroundSound.setVolume(0.2); // Lower volume during splash
+      } else if (gameState === 'results') {
+        backgroundSound.setVolume(0.1); // Even lower volume during results
+      }
+    }
+  }, [gameState, backgroundSound, isSoundEnabled]);
+
+  // Toggle sound function
+  const toggleSound = () => {
+    setIsSoundEnabled(!isSoundEnabled);
+    if (backgroundSound) {
+      if (!isSoundEnabled) {
+        // Turn sound on
+        backgroundSound.play((success) => {
+          if (!success) {
+            console.log('Sound playback failed');
+          }
+        });
+      } else {
+        // Turn sound off
+        backgroundSound.pause();
+      }
+    }
+  };
+
   useEffect(() => {
     console.log('Component mounted, loading level:', currentLevel);
     loadLevelQuestions();
-    // Show splash screen for 2 seconds when level changes
     setGameState('splash');
     const timer = setTimeout(() => {
       setGameState('playing');
     }, 2000);
-    
+
     return () => clearTimeout(timer);
   }, [currentLevel]);
 
@@ -92,7 +166,6 @@ export default function ReadingChallenge({ navigation }) {
 
   const renderWord = (word, fontSize, space, hLetters, color) => {
     if (!word) return <Text>Invalid word</Text>;
-    // Normalize hLetters to lowercase for consistent comparison
     const normalizedHLetters = hLetters.map(letter => letter.toLowerCase());
     console.log('Rendering word:', word, 'hLetters:', normalizedHLetters, 'color:', color);
     return word.split('').map((char, index) => {
@@ -115,31 +188,28 @@ export default function ReadingChallenge({ navigation }) {
 
   const handleAnswer = (isCorrect) => {
     console.log('Answer chosen, isCorrect:', isCorrect);
-    
+
     if (isCorrect) {
-      // If correct, add to score and proceed to next question
       setScore(score + 1);
       goToNextQuestion();
     } else {
-      // If incorrect, show the correct answer popup
       const currentQuestion = currentQuestions[currentQuestionIndex];
       setCorrectWord(currentQuestion.correct_word);
       setCorrectWordProps({
         fontSize: currentQuestion.font_size || 24,
         space: currentQuestion.space || 2,
         hLetters: currentQuestion.h_letter || [],
-        color: currentQuestion.color || 'red'
+        color: currentQuestion.color || 'red',
       });
       setShowCorrectAnswer(true);
-      
-      // Automatically close popup after 2 seconds and go to next question
+
       setTimeout(() => {
         setShowCorrectAnswer(false);
         goToNextQuestion();
       }, 2000);
     }
   };
-  
+
   const goToNextQuestion = () => {
     if (currentQuestionIndex + 1 < currentQuestions.length) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -158,11 +228,9 @@ export default function ReadingChallenge({ navigation }) {
   };
 
   const handleRetry = () => {
-    // Keep the same level when retrying
     loadLevelQuestions();
     setGameState('splash');
-    
-    // Show splash screen for 2 seconds when retrying level
+
     setTimeout(() => {
       setGameState('playing');
     }, 2000);
@@ -177,13 +245,19 @@ export default function ReadingChallenge({ navigation }) {
     );
   }
 
-  // Level splash screen
   if (gameState === 'splash') {
     return (
       <View style={styles.splashContainer}>
+        {/* Sound toggle button */}
+        <TouchableOpacity style={styles.soundButton} onPress={toggleSound}>
+          <Text style={styles.soundButtonText}>
+            {isSoundEnabled ? '🔊' : '🔇'}
+          </Text>
+        </TouchableOpacity>
+
         <LinearGradient
           style={styles.levelCircle}
-          colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+          colors={['#03cdc0', '#7e34de']}
           start={{x: 0, y: 0}}
           end={{x: 1, y: 0}}
         >
@@ -197,9 +271,8 @@ export default function ReadingChallenge({ navigation }) {
 
   if (gameState === 'results') {
     const totalQuestions = currentQuestions.length;
-    // Use the ResultScreen component
     return (
-      <ResultScreen 
+      <ResultScreen
         score={score}
         totalQuestions={totalQuestions}
         currentLevel={currentLevel}
@@ -226,21 +299,26 @@ export default function ReadingChallenge({ navigation }) {
   ];
   const shuffledAnswers = [...answers].sort(() => Math.random() - 0.5);
 
-  // Determine the font family based on current level
   const getFontFamily = () => {
     if (currentLevel <= 2) {
       return 'OpenDyslexic3-Regular';
     } else {
-      return 'normal'; 
+      return 'normal';
     }
   };
 
   return (
     <View style={styles.pageContainer}>
-      {/* Level indicator circle with gradient */}
+      {/* Sound toggle button */}
+      <TouchableOpacity style={styles.soundButtonGame} onPress={toggleSound}>
+        <Text style={styles.soundButtonText}>
+          {isSoundEnabled ? '🔊' : '🔇'}
+        </Text>
+      </TouchableOpacity>
+
       <LinearGradient
         style={styles.levelCircle}
-        colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+        colors={['#03cdc0', '#7e34de']}
         start={{x: 0, y: 0}}
         end={{x: 1, y: 0}}
       >
@@ -249,7 +327,7 @@ export default function ReadingChallenge({ navigation }) {
 
       <View style={styles.questionCard}>
         <Text style={styles.questionText}>Choose the correct answer?</Text>
-        
+
         {imageUrl ? (
           <Image
             source={{ uri: imageUrl }}
@@ -261,26 +339,24 @@ export default function ReadingChallenge({ navigation }) {
             <Text>Image not available</Text>
           </View>
         )}
-        
-        {/* Answer Options */}
+
         <View style={styles.answerContainer}>
           {shuffledAnswers.map((answer, index) => {
-            // Calculate dynamic height based on font size
             const buttonHeight = font_size ? Math.max(font_size * 2.5, 60) : 60;
-            
+
             return (
               <TouchableOpacity
                 key={index}
                 style={[
                   styles.answerButton,
-                  { height: buttonHeight } // Apply dynamic height
+                  { height: buttonHeight },
                 ]}
                 onPress={() => handleAnswer(answer.isCorrect)}
               >
                 <View style={styles.answerTextContainer}>
                   <Text style={[
                     styles.answerText,
-                    { fontFamily: getFontFamily() }
+                    { fontFamily: getFontFamily() },
                   ]}>
                     {renderWord(answer.text, font_size || 24, space || 2, h_letter || [], color || 'red')}
                   </Text>
@@ -291,7 +367,6 @@ export default function ReadingChallenge({ navigation }) {
         </View>
       </View>
 
-      {/* Correct Answer Popup Modal */}
       <Modal
         transparent={true}
         visible={showCorrectAnswer}
@@ -304,7 +379,7 @@ export default function ReadingChallenge({ navigation }) {
             <View style={styles.modalAnswer}>
               <Text style={[
                 styles.answerText,
-                { fontFamily: getFontFamily() }
+                { fontFamily: getFontFamily() },
               ]}>
                 {renderWord(
                   correctWord,
@@ -323,12 +398,11 @@ export default function ReadingChallenge({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  // Main container styles
   pageContainer: {
     flex: 1,
-    backgroundColor: '#6cbec9', // Teal background like in the screenshot
+    backgroundColor: '#6cbec9',
     alignItems: 'center',
-    paddingTop: -10, // Removed padding completely to position at the very top
+    paddingTop: -10,
     paddingHorizontal: 16,
   },
   container: {
@@ -338,15 +412,13 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#6cbec9',
   },
-  
-  // Level circle indicator
   levelCircle: {
     width: 70,
     height: 70,
     borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 5, 
+    marginTop: 5,
     marginBottom: 0,
   },
   levelNumber: {
@@ -354,12 +426,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
-  
-  // Question card
   questionCard: {
-    backgroundColor: '#e1e1e1', // Light gray card background
+    backgroundColor: '#e1e1e1',
     borderRadius: 20,
-    padding:-20,
+    padding: -20,
     width: '100%',
     alignItems: 'center',
     minHeight: '70%',
@@ -370,8 +440,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  
-  // Image styles
   image: {
     width: 250,
     height: 250,
@@ -387,8 +455,6 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     borderRadius: 10,
   },
-  
-  // Answer buttons
   answerContainer: {
     width: '100%',
     marginTop: 20,
@@ -413,8 +479,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     display: 'flex',
   },
-  
-  // Splash screen
   splashContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -432,8 +496,6 @@ const styles = StyleSheet.create({
     color: 'white',
     marginTop: 10,
   },
-  
-  // Modal popup styles
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -460,5 +522,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 60,
-  }
+  },
+
+  // Sound button styles
+  soundButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  soundButtonGame: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  soundButtonText: {
+    fontSize: 24,
+  },
 });
