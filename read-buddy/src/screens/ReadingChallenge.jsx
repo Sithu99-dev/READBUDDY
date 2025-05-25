@@ -1,12 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable curly */
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, Modal } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Sound from 'react-native-sound';
 import questionsData from '../data/Reading_Activity.json';
 import storage from '@react-native-firebase/storage';
+import firestore from '@react-native-firebase/firestore';
+import { AppContext } from '../App.tsx';
+import { myurl } from '../data/url'; // Add this import
 import ResultScreen from '../screens/rActivityScreen/ResultScreen';
 
 export default function ReadingChallenge({ navigation }) {
@@ -29,6 +32,9 @@ export default function ReadingChallenge({ navigation }) {
   // Sound state
   const [backgroundSound, setBackgroundSound] = useState(null);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  
+  // Add context for logged in user
+  const { loggedInUser } = useContext(AppContext);
 
   const levelStructure = {
     1: ['1-1', '1-2', '1-3', '1-4', '1-5'],
@@ -38,24 +44,32 @@ export default function ReadingChallenge({ navigation }) {
     5: ['5-1', '5-2', '5-3'],
   };
 
+  // Save score to Firestore when gameState changes to 'results'
+  useEffect(() => {
+    if (gameState === 'results') {
+      const totalQuestions = currentQuestions.length;
+      saveScoreToFirestore(currentLevel, score, totalQuestions);
+    }
+  }, [gameState, currentLevel, score, currentQuestions]);
+
   // Initialize sound
   useEffect(() => {
     // Enable playback in silence mode (iOS)
     Sound.setCategory('Playback');
 
     // Load background music
-    const sound = new Sound('sample_sound.mp3', Sound.MAIN_BUNDLE, (error) => {
+    const sound = new Sound('background_music.mp3', Sound.MAIN_BUNDLE, (error) => {
       if (error) {
         console.log('Failed to load sound', error);
         return;
       }
       console.log('Sound loaded successfully');
       setBackgroundSound(sound);
-
+      
       // Set sound properties
       sound.setNumberOfLoops(-1); // Loop indefinitely
       sound.setVolume(0.3); // Set volume to 30%
-
+      
       // Play background music if sound is enabled
       if (isSoundEnabled) {
         sound.play((success) => {
@@ -218,6 +232,88 @@ export default function ReadingChallenge({ navigation }) {
     }
   };
 
+  // Add the saveScoreToFirestore function from the second component
+  const saveScoreToFirestore = async (level, score, totalQuestions) => {
+    if (!loggedInUser) {
+      console.log('No logged-in user, skipping Firestore update');
+      return;
+    }
+    const textScore = `${level}.${score}`;
+    try {
+      // Step 1: Save score to Firestore
+      console.log('Saving textScore to Firestore:', textScore);
+      await firestore()
+        .collection('snake_game_leadersboard')
+        .doc(loggedInUser)
+        .set({ textScore }, { merge: true });
+      console.log(`Saved textScore: ${textScore} for user: ${loggedInUser}`);
+  
+      // Step 2: Fetch user's current textSettings
+      console.log('Fetching user document from Firestore');
+      const userDoc = await firestore()
+        .collection('snake_game_leadersboard')
+        .doc(loggedInUser)
+        .get();
+  
+      if (!userDoc.exists) {
+        throw new Error('User document does not exist');
+      }
+  
+      // Get the text settings and ensure all properties exist
+      const rawTextSettings = userDoc.data()?.textSettings || {};
+      
+      // Create a new object with all required properties for each letter
+      const textSettings = {};
+      Object.keys(rawTextSettings).forEach(letter => {
+        textSettings[letter] = {
+          fontSize: rawTextSettings[letter].fontSize || 16,
+          color: rawTextSettings[letter].color || 'black',
+          bold: rawTextSettings[letter].bold !== undefined ? rawTextSettings[letter].bold : false
+        };
+      });
+      
+      console.log('Processed textSettings:', textSettings);
+  
+      // Step 3: Call the /readchallenge API
+      const apiUrl = `${myurl}/readchallenge`;
+      console.log('Calling API at:', apiUrl);
+      console.log('Request payload:', { user_id: loggedInUser, text_score: textScore, text_settings: textSettings });
+  
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: loggedInUser,
+          text_score: textScore,
+          text_settings: textSettings,
+        }),
+      });
+  
+      // Log the raw response text before parsing
+      const responseText = await response.text();
+      console.log('Raw API response:', responseText);
+  
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+  
+      // Attempt to parse as JSON
+      const result = JSON.parse(responseText);
+      console.log('Parsed API response:', result);
+  
+      if (result.status === 'success') {
+        console.log('Successfully updated clustering and recommendations');
+      } else {
+        throw new Error(`API returned error: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error in saveScoreToFirestore:', error.message || error);
+      Alert.alert('Error', `Failed to save score or update recommendations: ${error.message || 'Unknown error'}`);
+    }
+  };
+
   const handleNextLevel = () => {
     if (currentLevel < 5) {
       setCurrentLevel(currentLevel + 1);
@@ -329,14 +425,18 @@ export default function ReadingChallenge({ navigation }) {
         <Text style={styles.questionText}>Choose the correct answer?</Text>
 
         {imageUrl ? (
-          <Image
-            source={{ uri: imageUrl }}
-            style={styles.image}
-            onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
-          />
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: imageUrl }}
+              style={styles.image}
+              resizeMode="contain"
+              onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
+              onLoad={() => console.log('Image loaded successfully')}
+            />
+          </View>
         ) : (
           <View style={styles.imagePlaceholder}>
-            <Text>Image not available</Text>
+            <Text style={styles.imagePlaceholderText}>Image not available</Text>
           </View>
         )}
 
@@ -441,19 +541,43 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   image: {
-    width: 250,
-    height: 250,
-    marginVertical: 20,
+    width: '100%',
+    height: '100%',
     borderRadius: 10,
   },
+  imageContainer: {
+    width: 280,
+    height: 280,
+    marginVertical: 20,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
   imagePlaceholder: {
-    width: 250,
-    height: 250,
+    width: 280,
+    height: 280,
     backgroundColor: '#d9d9d9',
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 20,
     borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#bbb',
+    borderStyle: 'dashed',
+  },
+  imagePlaceholderText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   answerContainer: {
     width: '100%',
@@ -523,7 +647,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 60,
   },
-
+  
   // Sound button styles
   soundButton: {
     position: 'absolute',
