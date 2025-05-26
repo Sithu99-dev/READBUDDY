@@ -35,6 +35,8 @@ import RegisterScreen from './screens/auth/RegisterScreen';
 
 // Import the wrapper component
 import ScreenWrapper from './screens/profile/ScreenWrapper';
+// import { setupUrlsInFirebase } from './data/url';
+
 
 // Define navigation param lists
 export type RootStackParamList = {
@@ -109,6 +111,22 @@ const withScreenWrapper = (Component) => {
 function App() {
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
+
+  //  useEffect(() => {
+  //   // Run initialization when app starts
+  //   const initializeUrls = async () => {
+  //     console.log('Setting up URLs in Firebase...');
+  //     const success = await setupUrlsInFirebase();
+  //     if (success) {
+  //       console.log('✅ URLs are now stored in Firebase!');
+  //     } else {
+  //       console.log('❌ Failed to store URLs in Firebase');
+  //     }
+  //   };
+
+  //   // Call the function
+  //   initializeUrls();
+  // }, []); 
 
   useEffect(() => {
     setInitializing(false);

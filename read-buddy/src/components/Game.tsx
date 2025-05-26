@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useContext } from 'react';
 import {
   SafeAreaView,
@@ -28,7 +26,8 @@ import { AppContext } from '../App.tsx';
 import gameResults from '../data/game_result.json';
 import Sound from 'react-native-sound';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App.tsx'; // Adjust path if needed
+import { RootStackParamList } from '../App.tsx';
+import GameOverModal from './GameOverModel.tsx';
 
 const SNAKE_INITIAL_POSITION: Coordinate[] = [{ x: 5, y: 5 }];
 const FOOD_INITIAL_POSITION: Coordinate = { x: 5, y: 20 };
@@ -53,7 +52,6 @@ const crashSound = new Sound('crash.mp3', Sound.MAIN_BUNDLE, (error) => {
   else {console.log('Crash sound loaded successfully');}
 });
 
-// Function to randomly select a fruit emoji to display
 function getRandomFruitEmoji(): string {
   const fruitEmojis = ['🍎', '🍊', '🍋', '🍇', '🍉', '🍓', '🍑', '🍍'];
   const randomIndex = Math.floor(Math.random() * fruitEmojis.length);
@@ -75,7 +73,6 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
   const [fruitSpawnTime, setFruitSpawnTime] = useState<number>(Date.now());
   const [timeToReachFruit, setTimeToReachFruit] = useState<number[]>([]);
 
-  // Background sound states
   const [backgroundSound, setBackgroundSound] = useState<Sound | null>(null);
   const [isSoundEnabled, setIsSoundEnabled] = useState<boolean>(true);
   const [soundLoaded, setSoundLoaded] = useState<boolean>(false);
@@ -101,6 +98,9 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
   const [topPlayers, setTopPlayers] = useState<{ user_name: string; score: number; email: string }[]>([]);
 
   const [currentUserScore, setCurrentUserScore] = useState<number>(0);
+
+  const [showGameOverModal, setShowGameOverModal] = useState<boolean>(false);
+  const [isNewHighScore, setIsNewHighScore] = useState<boolean>(false);
 
   // Handle screen focus/blur for navigation
   useFocusEffect(
@@ -136,7 +136,7 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
           console.log('Failed to load background sound from main bundle, trying raw folder:', error);
 
           // Try loading from raw folder (Android)
-          sound = new Sound('game_background.mp3', null, (error) => {
+          sound = new Sound('game_background.mp3', (error) => {
             if (error) {
               console.log('Failed to load background sound from raw folder:', error);
               setSoundLoaded(false);
@@ -279,41 +279,46 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
     fetchLeaderboard();
   }, [loggedInUser]);
 
-  // Update high score if current score is better
-  const updateHighScore = async (newScore: number) => {
-    if (!loggedInUser) {return;}
 
-    try {
-      const userRef = firestore().collection('snake_game_leadersboard').doc(loggedInUser);
-      const userDoc = await userRef.get();
+ const updateHighScore = async (newScore: number) => {
+  if (!loggedInUser) { return; }
 
-      if (userDoc.exists) {
-        const userData = userDoc.data();
-        const storedScore = userData?.score || 0;
-        if (newScore > storedScore) {
-          // Update score in Firestore
-          await userRef.update({ score: newScore });
-          setCurrentUserScore(newScore);
-          console.log('High score updated:', newScore);
+  try {
+    const userRef = firestore().collection('snake_game_leadersboard').doc(loggedInUser);
+    const userDoc = await userRef.get();
 
-          // Refresh leaderboard
-          const leaderboardSnapshot = await firestore()
-            .collection('snake_game_leadersboard')
-            .orderBy('score', 'desc')
-            .limit(3)
-            .get();
-          const updatedTopPlayers = leaderboardSnapshot.docs.map((doc) => ({
-            user_name: doc.data().user_name || 'Unknown',
-            score: doc.data().score || 0,
-            email: doc.id,
-          }));
-          setTopPlayers(updatedTopPlayers);
-        }
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      const storedScore = userData?.score || 0;
+      if (newScore > storedScore) {
+        // Set new high score flag
+        setIsNewHighScore(true);
+        
+        // Update score in Firestore
+        await userRef.update({ score: newScore });
+        setCurrentUserScore(newScore);
+        console.log('High score updated:', newScore);
+
+        // Refresh leaderboard
+        const leaderboardSnapshot = await firestore()
+          .collection('snake_game_leadersboard')
+          .orderBy('score', 'desc')
+          .limit(3)
+          .get();
+        const updatedTopPlayers = leaderboardSnapshot.docs.map((doc) => ({
+          user_name: doc.data().user_name || 'Unknown',
+          score: doc.data().score || 0,
+          email: doc.id,
+        }));
+        setTopPlayers(updatedTopPlayers);
+      } else {
+        setIsNewHighScore(false);
       }
-    } catch (error) {
-      console.error('Error updating high score:', error);
     }
-  };
+  } catch (error) {
+    console.error('Error updating high score:', error);
+  }
+};
 
   // Initialize wrong fruits (obstacles) based on level
   const initializeWrongFruits = (count: number) => {
@@ -496,70 +501,79 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
     setIsPaused(!isPaused);
   };
 
-  useEffect(() => {
-    if (isGameOver) {
-      const averageSpeed = timeToReachFruit.length > 0
-        ? timeToReachFruit.reduce((a, b) => a + b, 0) / timeToReachFruit.length
-        : 0;
+ useEffect(() => {
+  if (isGameOver) {
+    const averageSpeed = timeToReachFruit.length > 0
+      ? timeToReachFruit.reduce((a, b) => a + b, 0) / timeToReachFruit.length
+      : 0;
 
-      console.log(`Level: ${level}, Average Speed: ${averageSpeed}, Score: ${score}`);
+    console.log(`Level: ${level}, Average Speed: ${averageSpeed}, Score: ${score}`);
 
-      let result;
+    let result;
 
-      if (timeToReachFruit.length === 0) {
-        result = gameResults.find(record =>
-          record.level === level && record.result.includes('Low')
-        );
-      } else {
-        result = gameResults.find(record =>
-          record.level === level &&
-          averageSpeed >= record.rangemin &&
-          averageSpeed <= record.rangemax
-        );
-
-        if (!result) {
-          const levelResults = gameResults.filter(record => record.level === level);
-
-          if (levelResults.length > 0) {
-            result = levelResults.find(record => record.result.includes('Medium'));
-
-            console.warn(`No exact range match found for level ${level} with speed ${averageSpeed}`);
-          }
-        }
-      }
-
-      const gameResult = result || {
-        result: 'Unknown',
-        description: 'No matching performance range found.',
-        topic1: '', topic2: '', topic3: '', topic4: '', topic5: '', topic6: '', topic7: '',
-        message1: '', message2: '', message3: '', message4: '', message5: '', message6: '', message7: '',
-      };
-
-      setGameOverResult(gameResult);
-
-      if (!navigation) {
-        console.error('Navigation prop is undefined in Game component');
-        return;
-      }
-
-      Alert.alert(
-        'Game Over',
-        `Your Score: ${score}`,
-        [
-          {
-            text: 'Tap to See Result',
-            onPress: () => {
-              handleNavigation(); // Pause sound before navigating
-              navigation.navigate('GameOverScreen', { score, result: gameResult });
-            },
-          },
-        ],
-        { cancelable: false }
+    if (timeToReachFruit.length === 0) {
+      result = gameResults.find(record =>
+        record.level === level && record.result.includes('Low')
+      );
+    } else {
+      result = gameResults.find(record =>
+        record.level === level &&
+        averageSpeed >= record.rangemin &&
+        averageSpeed <= record.rangemax
       );
 
-      updateHighScore(score);
+      if (!result) {
+        const levelResults = gameResults.filter(record => record.level === level);
+
+        if (levelResults.length > 0) {
+          result = levelResults.find(record => record.result.includes('Medium'));
+          console.warn(`No exact range match found for level ${level} with speed ${averageSpeed}`);
+        }
+      }
     }
-  }, [isGameOver, score, navigation]);
+
+    const gameResult = result || {
+      result: 'Unknown',
+      description: 'No matching performance range found.',
+      topic1: '', topic2: '', topic3: '', topic4: '', topic5: '', topic6: '', topic7: '',
+      message1: '', message2: '', message3: '', message4: '', message5: '', message6: '', message7: '',
+    };
+
+    setGameOverResult(gameResult);
+    
+    // Update high score first
+    updateHighScore(score).then(() => {
+      // Show the custom modal after updating high score
+      setShowGameOverModal(true);
+    });
+  }
+}, [isGameOver, score, navigation]);
+
+// Add these handler functions
+const handleSeeResult = () => {
+  setShowGameOverModal(false);
+  handleNavigation(); // Pause sound before navigating
+  
+  if (!navigation) {
+    console.error('Navigation prop is undefined in Game component');
+    return;
+  }
+  
+  navigation.navigate('GameOverScreen', { 
+    score, 
+    result: gameOverResult || {
+      result: 'Unknown',
+      description: 'No matching performance range found.',
+      topic1: '', topic2: '', topic3: '', topic4: '', topic5: '', topic6: '', topic7: '',
+      message1: '', message2: '', message3: '', message4: '', message5: '', message6: '', message7: '',
+    }
+  });
+};
+
+const handlePlayAgain = () => {
+  setShowGameOverModal(false);
+  reloadGame();
+};
 
   if (!isLevelSelected) {
     return (
@@ -666,6 +680,14 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
               <WrongFruit key={index} x={fruit.x} y={fruit.y} />
             ))}
           </View>
+           <GameOverModal
+          visible={showGameOverModal}
+          score={score}
+          level={level}
+          isNewHighScore={isNewHighScore}
+          onSeeResult={handleSeeResult}
+          onPlayAgain={handlePlayAgain}
+        />
         </SafeAreaView>
       </PanGestureHandler>
     </GestureHandlerRootView>
