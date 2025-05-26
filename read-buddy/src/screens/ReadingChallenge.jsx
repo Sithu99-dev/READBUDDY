@@ -1,9 +1,11 @@
+/* eslint-disable no-shadow */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable curly */
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, Modal } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
 import Sound from 'react-native-sound';
 import questionsData from '../data/Reading_Activity.json';
 import storage from '@react-native-firebase/storage';
@@ -32,7 +34,8 @@ export default function ReadingChallenge({ navigation }) {
   // Sound state
   const [backgroundSound, setBackgroundSound] = useState(null);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
-  
+  const [soundLoaded, setSoundLoaded] = useState(false);
+
   // Add context for logged in user
   const { loggedInUser } = useContext(AppContext);
 
@@ -44,6 +47,31 @@ export default function ReadingChallenge({ navigation }) {
     5: ['5-1', '5-2', '5-3'],
   };
 
+  // Handle screen focus/blur for navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      // Screen is focused - resume background sound if enabled
+      console.log('ReadingChallenge screen focused');
+      if (backgroundSound && soundLoaded && isSoundEnabled) {
+        backgroundSound.play((success) => {
+          if (success) {
+            console.log('Background sound resumed on screen focus');
+          } else {
+            console.log('Failed to resume background sound on screen focus');
+          }
+        });
+      }
+
+      // Return cleanup function for when screen loses focus
+      return () => {
+        console.log('ReadingChallenge screen lost focus - pausing background sound');
+        if (backgroundSound && soundLoaded) {
+          backgroundSound.pause();
+        }
+      };
+    }, [backgroundSound, soundLoaded, isSoundEnabled])
+  );
+
   // Save score to Firestore when gameState changes to 'results'
   useEffect(() => {
     if (gameState === 'results') {
@@ -54,44 +82,97 @@ export default function ReadingChallenge({ navigation }) {
 
   // Initialize sound
   useEffect(() => {
-    // Enable playback in silence mode (iOS)
-    Sound.setCategory('Playback');
+    console.log('Initializing background sound...');
 
-    // Load background music
-    const sound = new Sound('background_music.mp3', Sound.MAIN_BUNDLE, (error) => {
-      if (error) {
-        console.log('Failed to load sound', error);
-        return;
-      }
-      console.log('Sound loaded successfully');
+    // Enable playback in silence mode (iOS)
+    Sound.setCategory('Playback', true);
+
+    // Initialize sound with different approaches
+    const initializeSound = () => {
+      // Try multiple file names and locations
+      const tryLoadSound = (fileName, location, callback) => {
+        const sound = new Sound(fileName, location, (error) => {
+          if (error) {
+            console.log(`Failed to load ${fileName} from ${location || 'raw folder'}:`, error);
+            callback(null);
+          } else {
+            console.log(`${fileName} loaded successfully from ${location || 'raw folder'}`);
+            callback(sound);
+          }
+        });
+      };
+
+      // Try different common background music file names (with and without extensions)
+      const fileNames = [
+        'reading_background.mp3',
+      ];
+
+      let soundLoaded = false;
+      let currentIndex = 0;
+
+      const tryNextFile = () => {
+        if (currentIndex >= fileNames.length) {
+          console.log('All background music files failed to load');
+          setSoundLoaded(false);
+          return;
+        }
+
+        const fileName = fileNames[currentIndex];
+        console.log(`Trying to load: ${fileName}`);
+
+        // Try main bundle first
+        tryLoadSound(fileName, Sound.MAIN_BUNDLE, (sound) => {
+          if (sound && !soundLoaded) {
+            soundLoaded = true;
+            setupSound(sound);
+          } else {
+            // Try raw folder (Android)
+            tryLoadSound(fileName, null, (sound) => {
+              if (sound && !soundLoaded) {
+                soundLoaded = true;
+                setupSound(sound);
+              } else {
+                currentIndex++;
+                tryNextFile();
+              }
+            });
+          }
+        });
+      };
+
+      tryNextFile();
+    };
+
+    const setupSound = (sound) => {
+      console.log('Setting up background sound...');
+      setSoundLoaded(true);
       setBackgroundSound(sound);
-      
+
       // Set sound properties
       sound.setNumberOfLoops(-1); // Loop indefinitely
       sound.setVolume(0.3); // Set volume to 30%
-      
-      // Play background music if sound is enabled
-      if (isSoundEnabled) {
-        sound.play((success) => {
-          if (!success) {
-            console.log('Sound playback failed');
-          }
-        });
-      }
-    });
+
+      console.log('Background sound setup completed');
+    };
+
+    initializeSound();
 
     // Cleanup when component unmounts
     return () => {
-      if (sound) {
-        sound.stop();
-        sound.release();
+      if (backgroundSound) {
+        console.log('Cleaning up sound...');
+        backgroundSound.stop(() => {
+          backgroundSound.release();
+        });
       }
     };
   }, []);
 
   // Control sound based on game state
   useEffect(() => {
-    if (backgroundSound && isSoundEnabled) {
+    if (backgroundSound && soundLoaded && isSoundEnabled) {
+      console.log('Adjusting volume for game state:', gameState);
+
       if (gameState === 'playing') {
         backgroundSound.setVolume(0.3); // Normal volume during gameplay
       } else if (gameState === 'splash') {
@@ -100,23 +181,45 @@ export default function ReadingChallenge({ navigation }) {
         backgroundSound.setVolume(0.1); // Even lower volume during results
       }
     }
-  }, [gameState, backgroundSound, isSoundEnabled]);
+  }, [gameState, backgroundSound, isSoundEnabled, soundLoaded]);
 
   // Toggle sound function
   const toggleSound = () => {
-    setIsSoundEnabled(!isSoundEnabled);
+    console.log('Toggling sound. Current state:', isSoundEnabled);
+
+    if (!soundLoaded) {
+      console.log('Sound not loaded yet, cannot toggle');
+      Alert.alert('Sound Error', 'Background music is not loaded yet. Please try again in a moment.');
+      return;
+    }
+
+    const newSoundState = !isSoundEnabled;
+    setIsSoundEnabled(newSoundState);
+
     if (backgroundSound) {
-      if (!isSoundEnabled) {
+      if (newSoundState) {
         // Turn sound on
+        console.log('Turning sound ON');
         backgroundSound.play((success) => {
-          if (!success) {
-            console.log('Sound playback failed');
+          if (success) {
+            console.log('Sound resumed successfully');
+          } else {
+            console.log('Failed to resume sound');
           }
         });
       } else {
         // Turn sound off
+        console.log('Turning sound OFF');
         backgroundSound.pause();
       }
+    }
+  };
+
+  // Handle navigation away from reading challenge
+  const handleNavigation = () => {
+    console.log('Navigating away from reading challenge - pausing background sound');
+    if (backgroundSound && soundLoaded) {
+      backgroundSound.pause();
     }
   };
 
@@ -247,38 +350,38 @@ export default function ReadingChallenge({ navigation }) {
         .doc(loggedInUser)
         .set({ textScore }, { merge: true });
       console.log(`Saved textScore: ${textScore} for user: ${loggedInUser}`);
-  
+
       // Step 2: Fetch user's current textSettings
       console.log('Fetching user document from Firestore');
       const userDoc = await firestore()
         .collection('snake_game_leadersboard')
         .doc(loggedInUser)
         .get();
-  
+
       if (!userDoc.exists) {
         throw new Error('User document does not exist');
       }
-  
+
       // Get the text settings and ensure all properties exist
       const rawTextSettings = userDoc.data()?.textSettings || {};
-      
+
       // Create a new object with all required properties for each letter
       const textSettings = {};
       Object.keys(rawTextSettings).forEach(letter => {
         textSettings[letter] = {
           fontSize: rawTextSettings[letter].fontSize || 16,
           color: rawTextSettings[letter].color || 'black',
-          bold: rawTextSettings[letter].bold !== undefined ? rawTextSettings[letter].bold : false
+          bold: rawTextSettings[letter].bold !== undefined ? rawTextSettings[letter].bold : false,
         };
       });
-      
+
       console.log('Processed textSettings:', textSettings);
-  
+
       // Step 3: Call the /readchallenge API
       const apiUrl = `${myurl}/readchallenge`;
       console.log('Calling API at:', apiUrl);
       console.log('Request payload:', { user_id: loggedInUser, text_score: textScore, text_settings: textSettings });
-  
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -290,19 +393,19 @@ export default function ReadingChallenge({ navigation }) {
           text_settings: textSettings,
         }),
       });
-  
+
       // Log the raw response text before parsing
       const responseText = await response.text();
       console.log('Raw API response:', responseText);
-  
+
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}: ${responseText}`);
       }
-  
+
       // Attempt to parse as JSON
       const result = JSON.parse(responseText);
       console.log('Parsed API response:', result);
-  
+
       if (result.status === 'success') {
         console.log('Successfully updated clustering and recommendations');
       } else {
@@ -319,6 +422,7 @@ export default function ReadingChallenge({ navigation }) {
       setCurrentLevel(currentLevel + 1);
     } else {
       Alert.alert('Congratulations!', 'You\'ve completed all levels!');
+      handleNavigation(); // Pause sound before going back
       navigation.goBack();
     }
   };
@@ -347,7 +451,7 @@ export default function ReadingChallenge({ navigation }) {
         {/* Sound toggle button */}
         <TouchableOpacity style={styles.soundButton} onPress={toggleSound}>
           <Text style={styles.soundButtonText}>
-            {isSoundEnabled ? '🔊' : '🔇'}
+            {!soundLoaded ? '⏳' : (isSoundEnabled ? '🔊' : '🔇')}
           </Text>
         </TouchableOpacity>
 
@@ -361,6 +465,9 @@ export default function ReadingChallenge({ navigation }) {
         </LinearGradient>
         <Text style={styles.splashText}>Level {currentLevel}</Text>
         <Text style={styles.splashSubText}>Get ready!</Text>
+        {!soundLoaded && (
+          <Text style={styles.soundStatusText}>Loading background music...</Text>
+        )}
       </View>
     );
   }
@@ -408,7 +515,7 @@ export default function ReadingChallenge({ navigation }) {
       {/* Sound toggle button */}
       <TouchableOpacity style={styles.soundButtonGame} onPress={toggleSound}>
         <Text style={styles.soundButtonText}>
-          {isSoundEnabled ? '🔊' : '🔇'}
+          {!soundLoaded ? '⏳' : (isSoundEnabled ? '🔊' : '🔇')}
         </Text>
       </TouchableOpacity>
 
@@ -620,6 +727,12 @@ const styles = StyleSheet.create({
     color: 'white',
     marginTop: 10,
   },
+  soundStatusText: {
+    fontSize: 16,
+    color: 'white',
+    marginTop: 20,
+    fontStyle: 'italic',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -647,7 +760,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 60,
   },
-  
+
   // Sound button styles
   soundButton: {
     position: 'absolute',
@@ -656,10 +769,18 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   soundButtonGame: {
     position: 'absolute',
@@ -668,12 +789,20 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   soundButtonText: {
-    fontSize: 24,
+    fontSize: 20,
   },
 });

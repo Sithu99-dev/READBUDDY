@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useContext } from 'react';
 import {
   SafeAreaView,
@@ -11,6 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { PanGestureHandler, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../styles/colors';
 import { Direction, Coordinate, GestureEventType } from '../types/types';
 import { checkGameOver } from '../utils/checkGameOver';
@@ -35,7 +38,6 @@ const GAME_BOUNDS = { xMin: 0, xMax: 35, yMin: 0, yMax: 59 };
 const MOVE_INTERVAL = 200;
 
 const SCORE_INCREMENT = 10;
-
 
 Sound.setCategory('Playback');
 
@@ -73,6 +75,11 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
   const [fruitSpawnTime, setFruitSpawnTime] = useState<number>(Date.now());
   const [timeToReachFruit, setTimeToReachFruit] = useState<number[]>([]);
 
+  // Background sound states
+  const [backgroundSound, setBackgroundSound] = useState<Sound | null>(null);
+  const [isSoundEnabled, setIsSoundEnabled] = useState<boolean>(true);
+  const [soundLoaded, setSoundLoaded] = useState<boolean>(false);
+
   const [gameOverResult, setGameOverResult] = useState<{
     result: string;
     description: string;
@@ -94,6 +101,147 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
   const [topPlayers, setTopPlayers] = useState<{ user_name: string; score: number; email: string }[]>([]);
 
   const [currentUserScore, setCurrentUserScore] = useState<number>(0);
+
+  // Handle screen focus/blur for navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      // Screen is focused - resume background sound if enabled
+      console.log('Snake Game screen focused');
+      if (backgroundSound && soundLoaded && isSoundEnabled) {
+        backgroundSound.play((success) => {
+          if (success) {
+            console.log('Background sound resumed on screen focus');
+          } else {
+            console.log('Failed to resume background sound on screen focus');
+          }
+        });
+      }
+
+      // Return cleanup function for when screen loses focus
+      return () => {
+        console.log('Snake Game screen lost focus - pausing background sound');
+        if (backgroundSound && soundLoaded) {
+          backgroundSound.pause();
+        }
+      };
+    }, [backgroundSound, soundLoaded, isSoundEnabled])
+  );
+  useEffect(() => {
+    console.log('Initializing background sound...');
+
+    const initializeBackgroundSound = () => {
+      // Try loading from main bundle first
+      let sound = new Sound('game_background.mp3', Sound.MAIN_BUNDLE, (error) => {
+        if (error) {
+          console.log('Failed to load background sound from main bundle, trying raw folder:', error);
+
+          // Try loading from raw folder (Android)
+          sound = new Sound('game_background.mp3', null, (error) => {
+            if (error) {
+              console.log('Failed to load background sound from raw folder:', error);
+              setSoundLoaded(false);
+              return;
+            }
+
+            console.log('Background sound loaded successfully from raw folder');
+            setupBackgroundSound(sound);
+          });
+        } else {
+          console.log('Background sound loaded successfully from main bundle');
+          setupBackgroundSound(sound);
+        }
+      });
+    };
+
+    const setupBackgroundSound = (sound: Sound) => {
+      setSoundLoaded(true);
+      setBackgroundSound(sound);
+
+      // Set sound properties
+      sound.setNumberOfLoops(-1); // Loop indefinitely
+      sound.setVolume(0.3); // Set volume to 30%
+
+      // Play background music if sound is enabled
+      if (isSoundEnabled) {
+        sound.play((success) => {
+          if (success) {
+            console.log('Background sound started playing successfully');
+          } else {
+            console.log('Background sound playback failed');
+          }
+        });
+      }
+    };
+
+    initializeBackgroundSound();
+
+    // Cleanup when component unmounts
+    return () => {
+      if (backgroundSound) {
+        console.log('Cleaning up background sound...');
+        backgroundSound.stop(() => {
+          backgroundSound.release();
+        });
+      }
+    };
+  }, []);
+
+  // Control background sound based on game state
+  useEffect(() => {
+    if (backgroundSound && soundLoaded && isSoundEnabled) {
+      console.log('Adjusting background volume for game state - Level Selected:', isLevelSelected, 'Game Over:', isGameOver, 'Paused:', isPaused);
+
+      if (!isLevelSelected) {
+        backgroundSound.setVolume(0.2); // Lower volume in level selection
+      } else if (isGameOver) {
+        backgroundSound.setVolume(0.1); // Even lower volume when game over
+      } else if (isPaused) {
+        backgroundSound.setVolume(0.15); // Lower volume when paused
+      } else {
+        backgroundSound.setVolume(0.3); // Normal volume during gameplay
+      }
+    }
+  }, [isLevelSelected, isGameOver, isPaused, backgroundSound, isSoundEnabled, soundLoaded]);
+
+  // Toggle background sound function
+  const toggleBackgroundSound = () => {
+    console.log('Toggling background sound. Current state:', isSoundEnabled);
+
+    if (!soundLoaded) {
+      console.log('Background sound not loaded yet, cannot toggle');
+      Alert.alert('Sound Error', 'Background music is not loaded yet. Please try again in a moment.');
+      return;
+    }
+
+    const newSoundState = !isSoundEnabled;
+    setIsSoundEnabled(newSoundState);
+
+    if (backgroundSound) {
+      if (newSoundState) {
+        // Turn sound on
+        console.log('Turning background sound ON');
+        backgroundSound.play((success) => {
+          if (success) {
+            console.log('Background sound resumed successfully');
+          } else {
+            console.log('Failed to resume background sound');
+          }
+        });
+      } else {
+        // Turn sound off
+        console.log('Turning background sound OFF');
+        backgroundSound.pause();
+      }
+    }
+  };
+
+  // Handle navigation away from game (like going to GameOverScreen)
+  const handleNavigation = () => {
+    console.log('Navigating away from game - pausing background sound');
+    if (backgroundSound && soundLoaded) {
+      backgroundSound.pause();
+    }
+  };
 
   // Fetch leaderboard data on component mount
   useEffect(() => {
@@ -400,7 +548,10 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
         [
           {
             text: 'Tap to See Result',
-            onPress: () => navigation.navigate('GameOverScreen', { score, result: gameResult }),
+            onPress: () => {
+              handleNavigation(); // Pause sound before navigating
+              navigation.navigate('GameOverScreen', { score, result: gameResult });
+            },
           },
         ],
         { cancelable: false }
@@ -416,6 +567,14 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
       source={require('../assets/speakingbg.png')}
         style={styles.levelSelectionBackground}
         imageStyle={{opacity: 0.3}}>
+
+        {/* Sound toggle button */}
+        <TouchableOpacity style={styles.soundButton} onPress={toggleBackgroundSound}>
+          <Text style={styles.soundButtonText}>
+            {!soundLoaded ? '⏳' : (isSoundEnabled ? '🔊' : '🔇')}
+          </Text>
+        </TouchableOpacity>
+
         <ScrollView contentContainerStyle={styles.levelSelectionContainer}>
           <View style={styles.scoreboardContainer}>
             <Text style={styles.scoreboardTitle}>Scoreboard</Text>
@@ -435,6 +594,9 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
                 </>
               )}
             </View>
+            {!soundLoaded && (
+              <Text style={styles.soundStatusText}>Loading background music...</Text>
+            )}
           </View>
 
           <Text style={styles.levelSelectionTitle}>Level Selection</Text>
@@ -479,6 +641,13 @@ export default function Game({ navigation }: NativeStackScreenProps<RootStackPar
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PanGestureHandler onGestureEvent={handleGesture}>
         <SafeAreaView style={styles.container}>
+          {/* Sound toggle button for game screen */}
+          <TouchableOpacity style={styles.soundButtonGame} onPress={toggleBackgroundSound}>
+            <Text style={styles.soundButtonText}>
+              {!soundLoaded ? '⏳' : (isSoundEnabled ? '🔊' : '🔇')}
+            </Text>
+          </TouchableOpacity>
+
           <Header
             reloadGame={reloadGame}
             pauseGame={pauseGame}
@@ -550,6 +719,12 @@ const styles = StyleSheet.create({
   scoreItemText: {
     fontSize: 16,
     color: '#333',
+  },
+  soundStatusText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 10,
+    fontStyle: 'italic',
   },
   levelSelectionTitle: {
     fontSize: 26,
@@ -627,5 +802,51 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  // Sound button styles
+  soundButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  soundButtonGame: {
+    position: 'absolute',
+    top: 10,
+    left: 15,
+    marginLeft:45,
+    marginTop:20,
+    width: 30,
+    height: 30,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  soundButtonText: {
+    fontSize: 20,
   },
 });
