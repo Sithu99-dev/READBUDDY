@@ -158,65 +158,7 @@ export default function WLevel2({ navigation }) {
     }
   };
 
-  // const uploadSignature = async (base64Data) => {
-  //   try {
-  //     if (!base64Data || base64Data.length < 50) {
-  //       console.log('Invalid or empty base64 data:', base64Data);
-  //       Alert.alert('Error', 'Please draw something before submitting');
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     console.log('Base64 Data:', base64Data.substring(0, 50) + '...');
-  //     const base64String = base64Data.replace(/^data:image\/\w+;base64,/, '');
-  //     console.log('Processed Base64:', base64String.substring(0, 50) + '...');
 
-  //     // Send the image to prediction API
-  //     try {
-  //       const response = await fetch(numberDetector + '/predict_base64', {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         body: JSON.stringify({
-  //           image: base64String,
-  //           expected_digit: currentNum.number
-  //         }),
-  //       });
-
-  //       const predictionData = await response.json();
-  //       console.log('Prediction response:', predictionData);
-        
-  //       // Get is_correct value from the response
-  //       const isCorrect = predictionData.is_correct;
-        
-  //       // Update the model result state
-  //       setModelResul(isCorrect);
-        
-  //       clearCanvas();
-        
-  //       // Handle the result immediately (don't rely on state update)
-  //       if (!isCorrect && currentNum) {
-  //         const videoRef = storage().ref(currentNum.answer);
-  //         const url = await videoRef.getDownloadURL();
-  //         console.log('Video URL fetched:', url);
-  //         setVideoUrl(url);
-  //         setLoading(false);
-  //       } else if (isCorrect) {
-  //         Alert.alert('Success', 'Your Answer is correct');
-  //         setLoading(false);
-  //         // playAudio();
-  //       }
-  //     } catch (error) {
-  //       console.error('Error predicting digit:', error);
-  //       Alert.alert('Error', 'Failed to process your drawing');
-  //       setLoading(false);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error uploading signature:', error);
-  //     Alert.alert('Error', 'Failed to upload signature');
-  //     setLoading(false);
-  //   }
-  // };
 
   const webStyle = `
     .m-signature-pad { width: 100%; height: 100%; margin: 0; padding: 0;  }
@@ -241,11 +183,7 @@ export default function WLevel2({ navigation }) {
       )}
 
       {!videoUrl && (
-        // <ImageBackground
-        //   source={require('../assets/kite.jpg')} // Replace with your desired background image
-        //   style={styles.canvasContainer}
-        //   resizeMode="cover"
-        // >
+
         <View style={styles.canvasContainer}>
           <SignatureScreen
             ref={signatureRef}

@@ -17,7 +17,7 @@ import {
 import Slider from '@react-native-community/slider';
 import firestore from '@react-native-firebase/firestore';
 import { AppContext } from '../App.tsx';
-import LinearGradient from 'react-native-linear-gradient'; // Import LinearGradient
+import LinearGradient from 'react-native-linear-gradient'; 
 
 export default function R2TextSettings({ navigation, route }) {
   const { scannedText, inputText, letterSettings: initialSettings } = route.params || {};

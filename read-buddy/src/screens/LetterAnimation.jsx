@@ -19,6 +19,7 @@ import Sound from 'react-native-sound';
 import storage from '@react-native-firebase/storage';
 import { myurl } from '../data/url';
 import IncorrectPronunciationPopup from './voice/IncorrectPronunciationPopup';
+import SuccessPopup from './SuccessPopup';
 
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
@@ -35,6 +36,7 @@ export default function LetterAnimation({ navigation, route }) {
   const [wordResults, setWordResults] = useState([]);
   const [imageUrl, setImageUrl] = useState(null);
   const [showIncorrectPopup, setShowIncorrectPopup] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const click = async () => {
     try {
@@ -221,41 +223,46 @@ export default function LetterAnimation({ navigation, route }) {
     }
   };
 
-  const stopRecording = async () => {
-    try {
-      const uri = await audioRecorderPlayer.stopRecorder();
-      console.log('Recording stopped at:', uri);
-      setIsRecording(false);
-      setStatus('Uploading audio...');
+const stopRecording = async () => {
+  try {
+    const uri = await audioRecorderPlayer.stopRecorder();
+    console.log('Recording stopped at:', uri);
+    setIsRecording(false);
+    setStatus('Uploading audio...');
 
-      const reference = storage().ref(`speechrecord/audio.mp3`);
-      await reference.putFile(uri);
-      const downloadURL = await reference.getDownloadURL();
-      console.log('Uploaded to Firebase:', downloadURL);
+    const reference = storage().ref(`speechrecord/audio.mp3`);
+    await reference.putFile(uri);
+    const downloadURL = await reference.getDownloadURL();
+    console.log('Uploaded to Firebase:', downloadURL);
 
-      const result = await click();
-      console.log('Model Result:', result);
-      if (result === null) {
-        setStatus('Error fetching model result. Try again.');
-        return;
-      }
-
-      setModelResult(result);
-      setWordResults((prev) => [...prev.slice(0, currentWordIndex), result]);
-
-      if (result === true) {
-        Alert.alert('Success', 'Your Answer is correct');
-        setStatus('Click Next to continue');
-      } else {
-        setStatus('Listen to the correct pronunciation');
-        // Show the incorrect pronunciation popup
-        setShowIncorrectPopup(true);
-      }
-    } catch (error) {
-      console.error('Stop recording/upload error:', error);
-      setStatus('Error uploading audio. Try again.');
+    const result = await click();
+    console.log('Model Result:', result);
+    if (result === null) {
+      setStatus('Error fetching model result. Try again.');
+      return;
     }
-  };
+
+    setModelResult(result);
+    setWordResults((prev) => [...prev.slice(0, currentWordIndex), result]);
+
+    if (result === true) {
+      // Show custom success popup instead of Alert.alert
+      setShowSuccessPopup(true);
+      setStatus('Perfect! Click Next to continue');
+    } else {
+      setStatus('Listen to the correct pronunciation');
+      setShowIncorrectPopup(true);
+    }
+  } catch (error) {
+    console.error('Stop recording/upload error:', error);
+    setStatus('Error uploading audio. Try again.');
+  }
+};
+
+const handleSuccessClose = () => {
+  setShowSuccessPopup(false);
+};
+
 
   const playCorrectAudio = async () => {
     try {
@@ -499,6 +506,13 @@ export default function LetterAnimation({ navigation, route }) {
           onStartAnimation={startAnimation}
         />
       </View>
+        <SuccessPopup
+        visible={showSuccessPopup}
+        onClose={handleSuccessClose}
+        title="🎉 Excellent!"
+        message="Your pronunciation is perfect!"
+        buttonText="Next Word"
+      />
     </ScrollView>
   );
 }
