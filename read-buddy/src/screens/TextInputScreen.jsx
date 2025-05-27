@@ -1,3 +1,5 @@
+/* eslint-disable no-shadow */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -6,7 +8,11 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Image,
 } from 'react-native';
+import Svg, { Text as SvgText } from 'react-native-svg';
 import firestore from '@react-native-firebase/firestore';
 import { AppContext } from '../App.tsx';
 
@@ -16,7 +22,7 @@ export default function TextInputScreen({ navigation, route }) {
   const { loggedInUser } = useContext(AppContext);
 
   const loadSettingsFromFirestore = async () => {
-    if (!loggedInUser) return;
+    if (!loggedInUser) {return;}
     try {
       const userDoc = await firestore()
         .collection('snake_game_leadersboard')
@@ -34,164 +40,283 @@ export default function TextInputScreen({ navigation, route }) {
   };
 
   useEffect(() => {
-    // Initial load
     loadSettingsFromFirestore();
-
-    // Reload settings when screen regains focus
     const unsubscribe = navigation.addListener('focus', () => {
-      loadSettingsFromFirestore(); // Fetch latest settings from Firestore
+      loadSettingsFromFirestore();
     });
-
     return unsubscribe;
   }, [navigation, loggedInUser]);
 
-  // Render a line with per-character styling, preserving whole words
-  const renderLine = (line) => {
-    const words = line.split(' ');
-    return words.map((word, wordIndex) => (
-      <Text key={wordIndex} style={styles.word}>
-        {word.split('').map((char, charIndex) => {
-          const settings = letterSettings[char] || {
-            fontSize: 16,
-            color: 'black',
-            bold: false,
-          };
-          return (
-            <Text
-              key={charIndex}
-              style={{
-                fontFamily: 'OpenDyslexic3-Regular',
-                fontSize: settings.fontSize,
-                color: settings.color,
-                fontWeight: settings.bold ? 'bold' : 'normal',
-              }}
-            >
-              {char}
-            </Text>
-          );
-        })}
-        {wordIndex < words.length - 1 && <Text> </Text>}
-      </Text>
-    ));
+  // SVG TEXT RENDERING METHOD
+  const renderLineWithSVG = (line, lineIndex) => {
+    let xOffset = 10; // Start padding
+    const yOffset = lineIndex * 70 + 50; // Line spacing and top margin
+    const svgElements = [];
+
+    line.split('').forEach((char, charIndex) => {
+      if (char === ' ') {
+        xOffset += 25; // Space width
+        return;
+      }
+
+      const settings = letterSettings[char];
+      const fontSize = (settings?.fontSize || 16) + 14;
+
+      // Validate and fix color values
+      let color = settings?.color || '#000';
+
+      // Check if color is a valid color format
+      const isValidColor = (colorStr) => {
+        if (!colorStr) {return false;}
+        // Check for hex colors (#000, #ffffff, etc.)
+        if (colorStr.startsWith('#')) {return true;}
+        // Check for your specific color values
+        const validColors = ['#E53935', '#43A047', '#1E88E5', '#FDD835', '#8E24AA', '#FB8C00', '#3949AB', '#000000'];
+        if (validColors.includes(colorStr)) {return true;}
+        // Check for named colors
+        const namedColors = ['red', 'green', 'blue', 'yellow', 'purple', 'orange', 'indigo', 'black'];
+        return namedColors.includes(colorStr.toLowerCase());
+      };
+
+      // If color is invalid (like "10.0"), use black
+      if (!isValidColor(color)) {
+        console.log(`Invalid color "${color}" for character "${char}", using black instead`);
+        color = '#000';
+      }
+
+      const bold = settings?.bold || false;
+
+      svgElements.push(
+        <SvgText
+          key={`${lineIndex}-${charIndex}`}
+          x={xOffset}
+          y={yOffset}
+          fontSize={fontSize}
+          fill={color || '#000000'}
+          stroke="none"
+          fontFamily="OpenDyslexic3-Regular"
+          fontWeight={bold ? 'bold' : 'normal'}
+          textAnchor="start"
+        >
+          {char}
+        </SvgText>
+      );
+
+      // Better character width calculation with inter-character spacing
+      const getCharacterWidth = (char, fontSize, nextChar) => {
+        let baseWidth;
+
+        // Wide characters
+        if ('mwMW'.includes(char)) {baseWidth = fontSize * 0.9;}
+        // Narrow characters
+        else if ('ijItf1'.includes(char)) {baseWidth = fontSize * 0.4;}
+        else if (char === 'l') {baseWidth = fontSize * 0.5;}
+        // Capital letters
+        else if ('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.includes(char)) {baseWidth = fontSize * 0.7;}
+        // Medium characters
+        else if ('abcdefghknopqrsuvxyz'.includes(char)) {baseWidth = fontSize * 0.6;}
+        // Numbers
+        else if ('023456789'.includes(char)) {baseWidth = fontSize * 0.6;}
+        // Default
+        else {baseWidth = fontSize * 0.6;}
+
+        // Add extra spacing between capital and lowercase letters
+        if (nextChar &&
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.includes(char) &&
+            'abcdefghijklmnopqrstuvwxyz'.includes(nextChar)) {
+          baseWidth += fontSize * 0.1; // Add extra space
+        }
+
+        return baseWidth;
+      };
+
+      const nextChar = charIndex < line.length - 1 ? line[charIndex + 1] : null;
+      const charWidth = getCharacterWidth(char, fontSize, nextChar);
+      xOffset += charWidth;
+    });
+
+    return svgElements;
   };
 
-  // Render text line by line
-  const renderLines = (text) => {
+  const renderTextWithSVG = (text) => {
     const lines = text.split('\n');
-    return lines.map((line, lineIndex) => (
-      <Text key={lineIndex} style={styles.lineContainer}>
-        {renderLine(line)}
-      </Text>
-    ));
+    const allElements = [];
+
+    // Process each line
+    lines.forEach((line, lineIndex) => {
+      const lineElements = renderLineWithSVG(line, lineIndex);
+      allElements.push(...lineElements);
+    });
+
+    // Calculate SVG dimensions dynamically
+    const longestLine = lines.reduce((max, line) => line.length > max.length ? line : max, '');
+    const maxWidth = Math.max(400, longestLine.length * 25); // Increased multiplier
+    const maxHeight = Math.max(120, lines.length * 70 + 60);
+
+    return (
+      <View style={styles.svgContainer}>
+        <ScrollView
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.svgScrollContainer}
+        >
+          <ScrollView
+            vertical={true}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.svgVerticalContainer}
+          >
+            <Svg
+              height={maxHeight}
+              width={maxWidth}
+              viewBox={`0 0 ${maxWidth} ${maxHeight}`}
+            >
+              {allElements}
+            </Svg>
+          </ScrollView>
+        </ScrollView>
+      </View>
+    );
   };
 
   return (
-    <View style={styles.outerContainer}>
-      {/* Fixed Heading */}
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>Write your text here</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <StatusBar backgroundColor="#5FC3C0" barStyle="dark-content" />
 
-      {/* Scrollable Input and Rendered Text */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-      >
-        <TextInput
-          style={styles.textInput}
-          multiline
-          placeholder="Type your text here..."
-          value={inputText}
-          onChangeText={setInputText}
-        />
-        {inputText ? (
-          <View style={styles.textWrapper}>{renderLines(inputText)}</View>
-        ) : null}
-      </ScrollView>
-
-      {/* Fixed Text Settings Button */}
-      <View style={styles.buttonContainer}>
+      {/* Header with back button and settings */}
+      <View style={styles.header}>
         <TouchableOpacity
-          onPress={() =>
-            navigation.navigate('Text Settings', { inputText, letterSettings })
-          }
+          style={styles.settingsButton}
+          onPress={() => navigation.navigate('Text Settings', { inputText, letterSettings })}
         >
-          <Text style={styles.positiveBtn}>Text Settings</Text>
+          <Image
+            source={require('../assets/settings.png')}
+            style={styles.settingsIcon}
+          />
         </TouchableOpacity>
       </View>
-    </View>
+
+      {/* Main title */}
+      <Text style={styles.title}>
+        Enter the text you want to change
+      </Text>
+
+      {/* Input field */}
+      <TextInput
+        style={styles.textInput}
+        placeholder="Input Value"
+        placeholderTextColor="#AAAAAA"
+        value={inputText}
+        onChangeText={setInputText}
+        multiline={true}
+      />
+
+      {/* Preview area for the formatted text */}
+      <View style={styles.previewContainer}>
+        {inputText ? (
+          <View style={styles.textWrapper}>
+            {renderTextWithSVG(inputText)}
+          </View>
+        ) : (
+          <View style={styles.placeholderContainer}>
+            <Text style={styles.placeholderText}>
+              Type something to see the preview
+            </Text>
+          </View>
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  outerContainer: {
+  container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#5FC3C0', // Teal background from image
   },
-  headerContainer: {
-    position: 'absolute',
-    top: 20,
-    left: 0,
-    right: 0,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    zIndex: 1,
-    padding: 10,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    marginBottom: 10,
   },
-  headerText: {
+  settingsIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#000',
+    fontWeight:'bold',
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(128, 128, 128, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft:160,
+    marginTop:-72,
+    marginBottom:4,
+  },
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2c3e50',
-  },
-  scrollView: {
-    flex: 1,
-    width: '100%',
-    marginTop: 70,
-    marginBottom: 60,
-  },
-  contentContainer: {
-    padding: 10,
-    paddingBottom: 20,
-  },
-  textInput: {
-    width: '100%',
-    minHeight: 100,
-    maxHeight: 200,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    padding: 10,
-    fontSize: 18,
     color: '#000',
-    textAlignVertical: 'top',
+    marginHorizontal: 20,
     marginBottom: 20,
   },
-  textWrapper: {
-    alignItems: 'center',
+  textInput: {
+    minHeight: 50,
+    maxHeight: 120,
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    marginHorizontal: 20,
+    marginBottom: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#000',
+    textAlignVertical: 'top',
   },
-  lineContainer: {
-    flexWrap: 'wrap',
-    marginVertical: 5,
+  previewContainer: {
+    flex: 1,
+    backgroundColor: '#FFF',
+    borderRadius: 25,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  textWrapper: {
+    flex: 1,
+    padding: 10,
+  },
+  placeholderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  placeholderText: {
+    fontSize: 16,
+    color: 'gray',
     textAlign: 'center',
   },
-  word: {
-    flexShrink: 0,
+
+  // SVG specific styles
+  svgContainer: {
+    flex: 1,
+    backgroundColor: '#FFF',
   },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 0,
-    right: 0,
+  svgScrollContainer: {
+    flexGrow: 1,
     alignItems: 'center',
-    zIndex: 1,
-    padding: 10,
+    justifyContent: 'center',
+    minHeight: '100%',
   },
-  positiveBtn: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#12181e',
-    padding: 10,
-    margin: 5,
-    backgroundColor: '#85fe78',
-    borderRadius: 10,
+  svgVerticalContainer: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingVertical: 20,
   },
 });

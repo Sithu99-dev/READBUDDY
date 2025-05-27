@@ -1,12 +1,11 @@
-
-
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
-import firestore from '@react-native-firebase/firestore';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import './utils/firebaseConfig';
+
+// Import screens
 import DashboardScreen from './screens/Dashboard';
 import ReadingScreen from './screens/ReadingScreen';
 import WritingScreen from './screens/WritingScreen';
@@ -28,9 +27,16 @@ import LetterAnimation from './screens/LetterAnimation';
 import GameOverScreen from './components/GameOverScreen';
 import Game from './components/Game';
 import WordWrite from './screens/WordsWrite';
-import TextInputScreen from './screens/TextInputScreen'; // Ensure correct path
+import TextInputScreen from './screens/TextInputScreen';
 import SplashScreen from './screens/welcomeScreen/SplashScreen';
 import OnboardingScreen from './screens/welcomeScreen/OnboardingScreen';
+import LoginScreen from './screens/auth/LoginScreen';
+import RegisterScreen from './screens/auth/RegisterScreen';
+
+// Import the wrapper component
+import ScreenWrapper from './screens/profile/ScreenWrapper';
+// import { setupUrlsInFirebase } from './data/url';
+
 
 // Define navigation param lists
 export type RootStackParamList = {
@@ -93,176 +99,34 @@ export const AppContext = React.createContext<{
   setLoggedInUser: () => {},
 });
 
-function LoginScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Login'>) {
-  const [userName, setUserName] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleLogin = async (setLoggedInUser: (user: string | null) => void) => {
-    try {
-      const usersSnapshot = await firestore()
-        .collection('snake_game_leadersboard')
-        .where('user_name', '==', userName)
-        .get();
-
-      if (!usersSnapshot.empty) {
-        const userDoc = usersSnapshot.docs[0];
-        const data = userDoc.data();
-        if (data.password === password) {
-          setLoggedInUser(data.email);
-        } else {
-          Alert.alert('Error', 'Invalid password');
-        }
-      } else {
-        Alert.alert('Error', 'User name not found');
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Login failed');
-    }
-  };
-
-  return (
-    <AppContext.Consumer>
-      {({ setLoggedInUser }) => (
-        <View style={styles.container}>
-          <Text style={styles.title}>Login</Text>
-          <Text style={styles.label}>User Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your user name"
-            value={userName}
-            onChangeText={setUserName}
-            autoCapitalize="none"
-          />
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          <TouchableOpacity style={styles.button} onPress={() => handleLogin(setLoggedInUser)}>
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.link}>Need an account? Register</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </AppContext.Consumer>
+// Create wrapper functions for all screens to add the ProfileButton
+const withScreenWrapper = (Component) => {
+  return ({ navigation, route }) => (
+    <ScreenWrapper navigation={navigation}>
+      <Component navigation={navigation} route={route} />
+    </ScreenWrapper>
   );
-}
-
-function RegisterScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Register'>) {
-  const [userName, setUserName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [age, setAge] = useState('');
-
-  const handleRegister = async () => {
-    try {
-      const ageNum = parseInt(age, 10);
-      if (isNaN(ageNum) || ageNum <= 18) {
-        Alert.alert('Error', 'Age must be greater than 18');
-        return;
-      }
-
-      const usersSnapshot = await firestore()
-        .collection('snake_game_leadersboard')
-        .where('user_name', '==', userName)
-        .get();
-
-      if (!usersSnapshot.empty) {
-        Alert.alert('Error', 'User name already exists');
-        return;
-      }
-
-      // Fetch default text settings from rb_text_settings/rbts1
-      const settingsDoc = await firestore()
-        .collection('rb_text_settings')
-        .doc('rbts1')
-        .get();
-
-      if (!settingsDoc.exists) {
-        Alert.alert('Error', 'Default text settings not found in Firestore');
-        return;
-      }
-
-      const defaultTextSettings = settingsDoc.data()?.textSettings;
-      if (!defaultTextSettings) {
-        Alert.alert('Error', 'Settings field missing in rbts1 document');
-        return;
-      }
-
-      await firestore()
-        .collection('snake_game_leadersboard')
-        .doc(email)
-        .set({
-          user_name: userName,
-          email,
-          password,
-          age: ageNum,
-          score: 0,
-          textSettings: defaultTextSettings, // Use fetched settings
-          textScore: "1.0",
-        });
-
-      Alert.alert('Success', 'Registered! Please log in.');
-      navigation.navigate('Login');
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Registration failed');
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Register</Text>
-      <Text style={styles.label}>User Name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your user name"
-        value={userName}
-        onChangeText={setUserName}
-        autoCapitalize="none"
-      />
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <Text style={styles.label}>Age</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your age"
-        value={age}
-        onChangeText={setAge}
-        keyboardType="numeric"
-      />
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.link}>Already have an account? Login</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
+};
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
+
+  //  useEffect(() => {
+  //   // Run initialization when app starts
+  //   const initializeUrls = async () => {
+  //     console.log('Setting up URLs in Firebase...');
+  //     const success = await setupUrlsInFirebase();
+  //     if (success) {
+  //       console.log('✅ URLs are now stored in Firebase!');
+  //     } else {
+  //       console.log('❌ Failed to store URLs in Firebase');
+  //     }
+  //   };
+
+  //   // Call the function
+  //   initializeUrls();
+  // }, []); 
 
   useEffect(() => {
     setInitializing(false);
@@ -276,33 +140,33 @@ function App() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {loggedInUser ? (
             <React.Fragment>
-              <Stack.Screen name="Home" component={DashboardScreen} />
-              <Stack.Screen name="Reading" component={ReadingScreen} />
-              <Stack.Screen name="Writing" component={WritingScreen} />
-              <Stack.Screen name="Speech" component={SpeechScreen} />
-              <Stack.Screen name="Focus" component={FocusScreen} />
-              <Stack.Screen name="Text Reading" component={ReadingText} />
-              <Stack.Screen name="Scanned Text" component={R1Scanned} />
-              <Stack.Screen name="Text Settings" component={R2TextSettings} />
-              <Stack.Screen name="Text Input" component={TextInputScreen} />
-              <Stack.Screen name="Reading Challenge" component={ReadingChallenge} />
-              <Stack.Screen name="Writing Letters" component={WLevel1} />
-              <Stack.Screen name="Writing Numbers" component={WLevel2} />
-              <Stack.Screen name="Writing Level 3" component={WLevel3} />
-              <Stack.Screen name="Writing Level 4" component={WLevel4} />
-              <Stack.Screen name="Speech Level 1" component={SLevel1} />
-              <Stack.Screen name="Speech Level 2" component={SLevel2} />
-              <Stack.Screen name="Speech Level 3" component={SLevel3} />
-              <Stack.Screen name="Speech Level 4" component={SLevel4} />
-              <Stack.Screen name="Say the word" component={LetterAnimation} />
-              <Stack.Screen name="Game" component={Game} />
-              <Stack.Screen name="GameOverScreen" component={GameOverScreen} />
-              <Stack.Screen name="Words" component={WordWrite} />
+              <Stack.Screen name="Home" component={withScreenWrapper(DashboardScreen)} />
+              <Stack.Screen name="Reading" component={withScreenWrapper(ReadingScreen)} />
+              <Stack.Screen name="Writing" component={withScreenWrapper(WritingScreen)} />
+              <Stack.Screen name="Speech" component={withScreenWrapper(SpeechScreen)} />
+              <Stack.Screen name="Focus" component={withScreenWrapper(FocusScreen)} />
+              <Stack.Screen name="Text Reading" component={withScreenWrapper(ReadingText)} />
+              <Stack.Screen name="Scanned Text" component={withScreenWrapper(R1Scanned)} />
+              <Stack.Screen name="Text Settings" component={withScreenWrapper(R2TextSettings)} />
+              <Stack.Screen name="Text Input" component={withScreenWrapper(TextInputScreen)} />
+              <Stack.Screen name="Reading Challenge" component={withScreenWrapper(ReadingChallenge)} />
+              <Stack.Screen name="Writing Letters" component={withScreenWrapper(WLevel1)} />
+              <Stack.Screen name="Writing Numbers" component={withScreenWrapper(WLevel2)} />
+              <Stack.Screen name="Writing Level 3" component={withScreenWrapper(WLevel3)} />
+              <Stack.Screen name="Writing Level 4" component={withScreenWrapper(WLevel4)} />
+              <Stack.Screen name="Speech Level 1" component={withScreenWrapper(SLevel1)} />
+              <Stack.Screen name="Speech Level 2" component={withScreenWrapper(SLevel2)} />
+              <Stack.Screen name="Speech Level 3" component={withScreenWrapper(SLevel3)} />
+              <Stack.Screen name="Speech Level 4" component={withScreenWrapper(SLevel4)} />
+              <Stack.Screen name="Say the word" component={withScreenWrapper(LetterAnimation)} />
+              <Stack.Screen name="Game" component={withScreenWrapper(Game)} />
+              <Stack.Screen name="GameOverScreen" component={withScreenWrapper(GameOverScreen)} />
+              <Stack.Screen name="Words" component={withScreenWrapper(WordWrite)} />
             </React.Fragment>
           ) : (
             <React.Fragment>
-                <Stack.Screen name="Splash" component={SplashScreen} />
-                <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+              <Stack.Screen name="Splash" component={SplashScreen} />
+              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
             </React.Fragment>

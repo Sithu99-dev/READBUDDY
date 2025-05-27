@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
@@ -7,23 +8,45 @@ import {
   ScrollView,
   Switch,
   Alert,
+  TextInput,
+  Modal,
+  SafeAreaView,
+  StatusBar,
+  Image,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { Picker } from '@react-native-picker/picker';
 import firestore from '@react-native-firebase/firestore';
 import { AppContext } from '../App.tsx';
+import LinearGradient from 'react-native-linear-gradient'; 
 
 export default function R2TextSettings({ navigation, route }) {
   const { scannedText, inputText, letterSettings: initialSettings } = route.params || {};
   const [letterSettings, setLetterSettings] = useState(initialSettings || {});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [selectedLetter, setSelectedLetter] = useState(null);
   const { loggedInUser } = useContext(AppContext);
 
   const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  const colors = ['black', 'red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
+  const colors = [
+    { name: 'Red', value: '#E53935' },
+    { name: 'Green', value: '#43A047' },
+    { name: 'Blue', value: '#1E88E5' },
+    { name: 'Yellow', value: '#FDD835' },
+    { name: 'Purple', value: '#8E24AA' },
+    { name: 'Orange', value: '#FB8C00' },
+    { name: 'Indigo', value: '#3949AB' },
+    { name: 'Black', value: '#000000' },
+  ];
+
+  // Filter letters based on search query
+  const filteredLetters = letters.filter(letter =>
+    letter.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     const loadSettingsFromFirestore = async () => {
-      if (!loggedInUser) return;
+      if (!loggedInUser) {return;}
       try {
         const userDoc = await firestore()
           .collection('snake_game_leadersboard')
@@ -53,8 +76,8 @@ export default function R2TextSettings({ navigation, route }) {
     }));
   };
 
-  const renderSentence = (sentence) => {
-    return sentence.split('').map((char, index) => {
+  const renderLetterPreview = () => {
+    return 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((char, index) => {
       const settings =
         letterSettings[char] || {
           fontSize: 18,
@@ -66,9 +89,10 @@ export default function R2TextSettings({ navigation, route }) {
           key={index}
           style={{
             fontFamily: 'OpenDyslexic3-Regular',
-            fontSize: settings.fontSize,
-            color: settings.color,
+            fontSize: settings.fontSize + 14,
+            color: settings.color || 'black',
             fontWeight: settings.bold ? 'bold' : 'normal',
+            // -----------------------------[]
           }}
         >
           {char}
@@ -94,119 +118,273 @@ export default function R2TextSettings({ navigation, route }) {
     }
   };
 
+  const getColorName = (colorValue) => {
+    const color = colors.find(c => c.value === colorValue);
+    return color ? color.name : 'Select color';
+  };
+
   return (
-    <>
-      <View style={styles.container}>
-        <View style={styles.sentenceContainer}>
-          <View style={styles.sentence}>
-            {renderSentence('THE QUICK BROWN FOX JUMPS OVER A LAZY DOG.')}
-          </View>
-          <View style={styles.sentence}>
-            {renderSentence('pack my box with five dozen liquor jugs.')}
-          </View>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar backgroundColor="#5FC3C0" barStyle="dark-content" />
+
+      {/* Header with back button and title */}
+      <View style={styles.header}>
+
+        <Text style={styles.headerTitle}>Text Settings</Text>
+      </View>
+
+      {/* Preview sections */}
+      <View style={styles.previewContainer}>
+        <View style={styles.previewText}>
+          {renderLetterPreview('THE QUICK BROWN FOX JUMPS OVER A LAZY DOG.')}
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.header}>Text Settings</Text>
+      {/* Search bar */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search letter"
+            placeholderTextColor="#8c8c8c"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <TouchableOpacity style={styles.searchIcon}>
+          <Text>🔍</Text>
+        </TouchableOpacity>
+      </View>
 
-        <Text style={styles.subHeader}>Customize each letter below:</Text>
-
-        {letters.map((letter) => (
+      {/* Scrollable settings */}
+      <ScrollView style={styles.scrollView}>
+        {filteredLetters.map((letter) => (
           <View key={letter} style={styles.letterSettings}>
-            <Text style={styles.letterTitle}>{letter}</Text>
+            <Text style={styles.letterTitle}>Letter - {letter}</Text>
 
-            <Text>Font Size (12-20):</Text>
-            <Slider
-              minimumValue={12}
-              maximumValue={20}
-              step={0.5}
-              value={letterSettings[letter]?.fontSize || 18}
-              onValueChange={(value) => updateLetterSetting(letter, 'fontSize', value)}
-              style={styles.slider}
-            />
+            <View style={styles.settingsCard}>
+              <View style={styles.settingRow}>
+                <Text style={styles.settingLabel}>Font Size (18 - 34)</Text>
+                <Slider
+                  minimumValue={12}
+                  maximumValue={24}
+                  step={1}
+                  value={letterSettings[letter]?.fontSize || 18}
+                  onValueChange={(value) => updateLetterSetting(letter, 'fontSize', value)}
+                  style={styles.slider}
+                  minimumTrackTintColor="#5F4B8B"
+                  thumbTintColor="#5F4B8B"
+                />
+              </View>
 
-            <Text>Font Color:</Text>
-            <Picker
-              selectedValue={letterSettings[letter]?.color || 'black'}
-              style={styles.picker}
-              onValueChange={(value) => updateLetterSetting(letter, 'color', value)}
-            >
-              {colors.map((color) => (
-                <Picker.Item key={color} label={color} value={color} />
-              ))}
-            </Picker>
+              <View style={styles.settingRow}>
+                <Text style={styles.settingLabel}>Font Color</Text>
+                <TouchableOpacity
+                  style={styles.colorSelector}
+                  onPress={() => {
+                    setSelectedLetter(letter);
+                    setShowColorPicker(true);
+                  }}
+                >
+                  <Text style={styles.colorSelectorText}>
+                    {getColorName(letterSettings[letter]?.color || '#000000')}
+                  </Text>
+                  <Text style={styles.dropdownIcon}>▼</Text>
+                </TouchableOpacity>
+              </View>
 
-            <Text>Boldness:</Text>
-            <Switch
-              value={letterSettings[letter]?.bold || false}
-              onValueChange={(value) => updateLetterSetting(letter, 'bold', value)}
-            />
+              <View style={styles.settingRow}>
+                <Text style={styles.settingLabel}>Boldness</Text>
+                <Switch
+                  value={letterSettings[letter]?.bold || false}
+                  onValueChange={(value) => updateLetterSetting(letter, 'bold', value)}
+                  trackColor={{ false: '#D9D9D9', true: '#5F4B8B' }}
+                  thumbColor={letterSettings[letter]?.bold ? '#FFFFFF' : '#F4F3F4'}
+                />
+              </View>
+            </View>
           </View>
         ))}
       </ScrollView>
 
-      <View style={styles.container}>
-        <TouchableOpacity onPress={saveSettingsToFirestore}>
-          <Text style={styles.positiveBtn}>Apply Settings</Text>
-        </TouchableOpacity>
-      </View>
-    </>
+      {/* Color picker modal */}
+      <Modal
+        visible={showColorPicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowColorPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.colorPickerContainer}>
+            {colors.map((color) => (
+              <TouchableOpacity
+                key={color.name}
+                style={styles.colorOption}
+                onPress={() => {
+                  updateLetterSetting(selectedLetter, 'color', color.value);
+                  setShowColorPicker(false);
+                }}
+              >
+                <Text style={styles.colorName}>{color.name}</Text>
+                <View style={[styles.colorSample, { backgroundColor: color.value }]} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Apply button with LinearGradient */}
+      <TouchableOpacity onPress={saveSettingsToFirestore}>
+        <LinearGradient
+          style={styles.applyButton}
+          colors={['#03cdc0', '#7e34de']} // Blue to purple gradient
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+        >
+          <Text style={styles.applyButtonText}>Apply Settings</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#5FC3C0', // Teal background from image
   },
   header: {
-    fontSize: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  backButton: {
+    padding: 5,
+  },
+  backButtonText: {
+    fontSize: 28,
+    color: '#000',
     fontWeight: 'bold',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginLeft: 15,
+  },
+  previewContainer: {
+    backgroundColor: 'white',
+    marginHorizontal: 15,
     marginVertical: 10,
+    borderRadius: 8,
+    padding: 10,
   },
-  sentenceContainer: {
-    marginVertical: 20,
-  },
-  sentence: {
+  previewText: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    borderWidth: 1,
-    borderColor: 'black',
-    borderRadius: 5,
-    padding: 5,
-    margin: 5,
   },
-  subHeader: {
-    fontSize: 20,
+  searchContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#E9E6EF',
+    marginHorizontal: 15,
     marginVertical: 10,
+    borderRadius: 25,
+    padding: 5,
+    alignItems: 'center',
+  },
+  searchInput: {
+    flex: 1,
+    padding: 10,
+    fontSize: 16,
+  },
+  searchIcon: {
+    padding: 10,
+    borderTopRightRadius: 25,
+    borderBottomRightRadius: 25,
+  },
+  scrollView: {
+    flex: 1,
+    marginBottom: 10,
   },
   letterSettings: {
-    marginVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    paddingBottom: 10,
+    marginHorizontal: 15,
+    marginVertical: 5,
   },
   letterTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  settingsCard: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 10,
+  },
+  settingRow: {
+    marginBottom: 15,
+  },
+  settingLabel: {
+    fontSize: 16,
+    marginBottom: 5,
   },
   slider: {
     width: '100%',
     height: 40,
   },
-  picker: {
-    height: 50,
-    width: '100%',
-    color: '#000',
-  },
-  positiveBtn: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#12181e',
+  colorSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
+    borderRadius: 20,
     padding: 10,
-    margin: 5,
-    backgroundColor: '#85fe78',
+    backgroundColor: 'white',
+  },
+  colorSelectorText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  dropdownIcon: {
+    fontSize: 12,
+    color: '#666',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  colorPickerContainer: {
+    width: '70%',
+    backgroundColor: 'white',
     borderRadius: 10,
-    textAlign: 'center',
+    padding: 15,
+  },
+  colorOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  colorName: {
+    fontSize: 16,
+  },
+  colorSample: {
+    width: 30,
+    height: 20,
+    borderRadius: 5,
+  },
+  applyButton: {
+    borderRadius: 10,
+    padding: 15,
+    margin: 15,
+    alignItems: 'center',
+  },
+  applyButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF', // Changed to white for better contrast with gradient
   },
 });

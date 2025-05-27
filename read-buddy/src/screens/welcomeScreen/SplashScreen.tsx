@@ -2,7 +2,6 @@
 import React, { useEffect, useRef } from 'react';
 import {
   View,
-  Text,
   Image,
   StyleSheet,
   Animated,
@@ -61,13 +60,13 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
         }}
       >
         <Image
-          source={require('../../assets/bg2.jpg')}
+          source={require('../../assets/logo.png')}
           style={styles.logo}
           resizeMode="contain"
         />
 
-        <Text style={styles.mainText}>READBUDDY</Text>
-        <Text style={styles.subText}>Learn. Read. Grow.</Text>
+        {/* <Text style={styles.mainText}>READBUDDY</Text>
+        <Text style={styles.subText}>Learn. Read. Grow.</Text> */}
       </Animated.View>
     </View>
   );
@@ -164,8 +163,8 @@ const styles = StyleSheet.create({
     borderColor: BORDER_COLOR,
   },
   logo: {
-    width: width * 0.4,
-    height: width * 0.4,
+    width: width * 0.7,
+    height: width * 0.7,
     marginBottom: 20,
   },
   mainText: {

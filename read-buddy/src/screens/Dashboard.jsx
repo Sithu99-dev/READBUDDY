@@ -1,7 +1,6 @@
 // screens/DashboardScreen.js
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
-import { AppContext } from '../App';
 import LinearGradient from 'react-native-linear-gradient';
 
 export default function DashboardScreen({ navigation }) {
@@ -9,16 +8,6 @@ export default function DashboardScreen({ navigation }) {
     <ImageBackground
       source={require('../assets/dashbordmain.png')}
       style={styles.container}>
-      <AppContext.Consumer>
-        {({ setLoggedInUser }) => (
-          <View style={styles.logout}>
-            <TouchableOpacity onPress={() => setLoggedInUser(null)}>
-              <Text style={{ color: '#12181e', fontWeight: 'bold', marginTop: 20, backgroundColor: '#27ac1f', padding: 8, borderRadius: 8 }}>Logout</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </AppContext.Consumer>
-
       <View style={styles.mainContainer}>
         <Text style={styles.mainTitle}>Let's Play{'\n'}     & Learn..!</Text>
 

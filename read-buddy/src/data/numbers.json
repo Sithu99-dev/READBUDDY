@@ -1,5 +1,10 @@
 [
     {
+        "num": "Zero",
+        "number": "0",
+        "answer": "Numbers/0.mp4"
+    },
+    {
         "num": "One",
         "number": "1",
         "answer": "Numbers/1.mov"
