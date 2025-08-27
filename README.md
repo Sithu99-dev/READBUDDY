@@ -147,7 +147,7 @@ npm start
 ## 🏗️ System Architecture
 
 <div align="center">
-<img src="https://github.com/user-attachments/assets/3bc55eb3-fb2d-4833-8cfd-37736ae7fd15" alt="ReadBuddy System Architecture" width="600"/>
+<img width="1631" height="1092" alt="sithumReserch-reabuddy architeture drawio" src="https://github.com/user-attachments/assets/1504a565-f87d-4a2a-8005-c6149f067f09" />
 </div>
 
 ---
